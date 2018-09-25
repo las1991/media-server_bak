@@ -5,7 +5,10 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.eventbus.EventBus;
 import com.sengled.media.event.Event;
+import com.sengled.media.server.http.handler.HttpServletHandler;
 import com.sengled.media.server.rtsp.codec.RtspObjectDecoder;
+import com.sengled.media.server.rtsp.codec.RtspObjectEncoder;
+import com.sengled.media.server.rtsp.handler.RtspServerHandler;
 import com.sengled.media.ssl.SSL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -15,6 +18,9 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -27,17 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * RTSP 服务
- * <p>
- * <ul>
- * <li>1、服务有 {@link SessionMode#PUBLISH PUBLISH}, {@link SessionMode#PLAY PLAY} 两种运用场景，
- * 分别用于：向服务器推流，和从播放器拉流。
- * </li>
- * <li>2、利用 {@link RtspSession} 实现流内容共享。 服务器会把  {@link SessionMode#PUBLISH PUBLISH} 模式收取的流，转发给 {@link SessionMode#PLAY PLAY} 模式的客户端，</li>
- *
- * </ul>
- * </p>
- *
  * @author 陈修恒
  * @date 2016年4月15日
  */
@@ -58,7 +53,10 @@ public class RtspServer {
     private final int maxWorkerThreads = RTSP.SERVER_MAX_WORKER_THREADS;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
-    public final static EventExecutorGroup EXECUTOR_GROUP = new DefaultEventExecutorGroup(RTSP.SERVER_MAX_WORKER_THREADS, new DefaultThreadFactory("netty-executor", Thread.MAX_PRIORITY))
+    public final static EventExecutorGroup EXECUTOR_GROUP =
+            new DefaultEventExecutorGroup(
+                    RTSP.SERVER_MAX_WORKER_THREADS,
+                    new DefaultThreadFactory("netty-executor", Thread.MAX_PRIORITY));
     private final Class<? extends ServerChannel> channelClass;
 
     /**
@@ -254,11 +252,25 @@ public class RtspServer {
 
                             // idle 事件
                             pipeline.addLast("IDEL_STATE_HANDLER", idleStateHandler);
-                            pipeline.addLast("DECODER", new RtspObjectDecoder());
+
 
                             // 选择协议
-                            pipeline.addLast(new RtspServerPrepareHandler(pipeline, server, config));
+                            pipeline.addLast(new RtspServerPrepareHandler());
 
+                            if (config.isUseHTTPProtocol()) {
+                                pipeline.addLast(new HttpRequestDecoder());
+                                pipeline.addLast(new HttpResponseEncoder());
+                                pipeline.addLast(new HttpServletHandler(server.getServerContext()));
+
+                            }
+
+                            // 使用 RTSP 协议
+                            if (config.isUseRTSPProtocol()) {
+                                pipeline.addLast(new RtspDecoder());
+                                pipeline.addLast(new RtspServerHandler(server.serverContext, config.getMethods()));
+                            }
+
+                            pipeline.addLast(new RtspServerPrepareHandler());
                         }
                     });
 

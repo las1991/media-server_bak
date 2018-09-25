@@ -93,6 +93,58 @@ public abstract class RtpPacket implements SourceRtpPacket {
         this.headerExtension = that.headerExtension;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public boolean isPadding() {
+        return padding;
+    }
+
+    public boolean isExtension() {
+        return extension;
+    }
+
+    public int getCc() {
+        return cc;
+    }
+
+    public boolean isMarker() {
+        return marker;
+    }
+
+    public int getPayloadType() {
+        return payloadType;
+    }
+
+    public int getSeqNumber() {
+        return seqNumber;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public long getSyncSource() {
+        return syncSource;
+    }
+
+    public List<Long> getcSources() {
+        return cSources;
+    }
+
+    public int getProfile() {
+        return profile;
+    }
+
+    public int getHeaderExtensionLength() {
+        return headerExtensionLength;
+    }
+
+    public byte[] getHeaderExtension() {
+        return headerExtension;
+    }
+
     @Override
     public ByteBuf content() {
         return content;
