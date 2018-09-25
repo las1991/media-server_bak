@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+<!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
+<property name="LOG_HOME" value="/var/log/sengled" />
+<property name="APP_NAME" value="media-server-java" />
+
+<!-- 按照每天生成日志文件 -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+    <file>${LOG_HOME}/${APP_NAME}.log</file>   
+
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{0} - %msg%n</pattern>
+    </encoder>
+    
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">   
+      <fileNamePattern>${LOG_HOME}/${APP_NAME}.%i.log.zip</fileNamePattern>   
+      <minIndex>1</minIndex>   
+      <maxIndex>30</maxIndex>   
+    </rollingPolicy>   
+   
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">   
+      <maxFileSize>50MB</maxFileSize>   
+    </triggeringPolicy>   
+  </appender> 
+
+<!-- 日志输出级别 -->
+<root level="INFO" >
+    <appender-ref ref="FILE" />
+</root>
+</configuration>

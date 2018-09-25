@@ -1,0 +1,113 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>com.sengled.media</groupId>
+      <artifactId>media-v3</artifactId>
+      <version>5.1.3</version>
+      <relativePath>../../../</relativePath>
+    </parent>
+    
+    <artifactId>sengled-mediaserver-assembly</artifactId>
+    <name>mediaserver-assembly</name>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-mediaserver</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+      
+    </dependencies>
+
+    <!-- 不同的打包环境 -->
+    <profiles>
+        <!-- 开发环境，默认激活 -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <!--默认启用的是dev环境配置 -->
+            </activation>
+        </profile>
+        <!-- debug环境，默认激活 -->
+        <profile>
+            <id>debug</id>
+            <properties>
+                <env>debug</env>
+            </properties>
+        </profile>
+        <!-- 测试环境 -->
+        <profile>
+            <id>test</id>
+            <properties>
+                <env>test</env>
+            </properties>
+        </profile>
+        <!-- 生产环境 -->
+        <profile>
+            <id>product</id>
+            <properties>
+                <env>product</env>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <filters>
+            <filter>src/main/filters/filter-${env}.properties</filter>
+        </filters>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>config/*.properties</include>
+                </includes>
+                <!-- <excludes> <exclude>**/*.xml</exclude> </excludes> -->
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.txt</include>
+                    <include>**/*.csv</include>
+                    <include>**/*.dat</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <!-- 生成独立运行的 jar 包 -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.4</version>  
+                
+                <configuration>
+                    <finalName>media-v3</finalName>  
+                    <appendAssemblyId>true</appendAssemblyId>  
+                   <descriptors> <!--描述文件路径 -->
+                       <descriptor>src/main/assembly/src.xml</descriptor>
+                   </descriptors>
+               </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!-- 绑定到package生命周期阶段上 -->
+                        <phase>package</phase>
+                        
+                        <goals>
+                            <!-- 绑定到package生命周期阶段上 -->
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

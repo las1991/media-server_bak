@@ -1,0 +1,9 @@
+---
+os: linux
+version: 1.0
+appService: media-v3
+
+exec:
+  - type: java
+    version: 1.8
+    verify: java -version

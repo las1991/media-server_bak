@@ -1,0 +1,57 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>distribution</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+    <files>
+        <file>
+            <source>${project.basedir}/release_note</source>
+            <destName>release_note</destName>
+        </file>
+        <file>
+            <source>${project.basedir}/src/main/resources/logback.xml</source>
+            <destName>logback.xml</destName>
+            <outputDirectory>config</outputDirectory>
+        </file>
+    </files>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/config</directory>
+            <outputDirectory>config</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/sbin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>755</fileMode>
+        </fileSet>
+        
+        <fileSet>
+            <directory>${project.basedir}/../mediaserver/src/main/resources/apps/</directory>
+            <outputDirectory>apps</outputDirectory>
+            <fileMode>644</fileMode>
+        </fileSet>
+        
+        <fileSet>
+            <directory>${project.basedir}/../mediaserver/src/main/resources/static-resources/</directory>
+            <outputDirectory>static</outputDirectory>
+            <fileMode>644</fileMode>
+        </fileSet>
+        
+        <fileSet>
+            <directory>${project.basedir}/src/../../../3rd</directory>
+            <outputDirectory>libs</outputDirectory>
+            <fileMode>644</fileMode>
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory>libs</outputDirectory>
+            <!-- 将scope为runtime的依赖包打包到libs目录下。 -->
+            <scope>runtime</scope>
+        </dependencySet>
+    </dependencySets>
+</assembly>

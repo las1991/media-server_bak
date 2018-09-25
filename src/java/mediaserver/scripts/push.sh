@@ -1,0 +1,1 @@
+./ffmpeg -rtsp_transport tcp -i rtsp://101.68.222.221:554/662B69D43FA7224DC8ADB27C8F904F7A.sdp -vcodec copy -acodec copy -rtsp_transport tcp -f rtsp rtsp://127.0.0.1:554/662B69D43FA7224DC8ADB27C8F904F7A.sdp

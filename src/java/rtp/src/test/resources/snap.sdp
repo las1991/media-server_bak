@@ -1,0 +1,18 @@
+v=0
+o=- 266117783 266117783 IN IP4 127.0.0.1
+s=liveSengledIPC
+i=LIVE555 Streaming Media
+c=IN IP4 127.0.0.1
+t=0 0
+a=x-qt-text-nam:101.68.222.221
+a=x-qt-text-inf:liveSengledIPC
+a=x-qt-text-cmt:source application:LIVE555 Streaming Media
+a=x-qt-text-aut:DarwinInjector
+a=x-qt-text-cpy:
+m=video 0 RTP/AVP 97
+a=rtpmap:97 H264/90000
+a=control:rtsp://101.68.222.221:554/1D60B079F7625398CEBE1C955E8859F7.sdp/streamid=0
+a=codecpts:1
+m=audio 0 RTP/AVP 8
+a=ptime:20
+a=control:rtsp://101.68.222.221:554/1D60B079F7625398CEBE1C955E8859F7.sdp/streamid=1

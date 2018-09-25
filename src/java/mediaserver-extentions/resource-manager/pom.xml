@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>com.sengled.media.extentions</groupId>
+      <artifactId>sengled-mediaserver-extentions</artifactId>
+      <version>5.1.3</version>
+      <relativePath>../</relativePath>
+    </parent>
+
+
+
+    <artifactId>sengled-resource-manager</artifactId>
+    <name>resource-manager</name>
+    <description>
+    	替代之前的资源管理服务
+    </description>
+
+    <properties>
+        <metrics.version>3.1.2</metrics.version>
+    </properties>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-bootstrap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-spi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-mediaserver-configuration</artifactId>
+            <version>${project.version}</version>
+       </dependency>
+       
+        <!-- metrics 监控   -->
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metric.version}</version>
+        </dependency>
+        
+        <!-- Google-Guava-EventBus -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <dependencyManagement>
+        <dependencies>
+          <dependency>
+           <groupId>io.netty</groupId>
+           <artifactId>netty-buffer</artifactId>
+           <version>${netty.version}</version>
+          </dependency>
+           <dependency>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-all</artifactId>
+               <version>${netty.version}</version>
+           </dependency>
+           <dependency>
+               <groupId>io.netty</groupId>
+               <artifactId>netty-transport-native-epoll</artifactId>
+               <classifier>linux-x86_64</classifier>
+               <version>${netty.version}</version>
+           </dependency>
+	        <dependency>
+	          <groupId>io.netty</groupId>
+	          <artifactId>netty-tcnative-boringssl-static</artifactId>
+	          <version>${netty-tcnative.version}</version>
+              <classifier>linux-x86_64</classifier>
+	        </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+
+        <plugins>
+        </plugins>
+    </build>
+</project>

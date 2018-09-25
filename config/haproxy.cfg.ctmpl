@@ -1,0 +1,88 @@
+global
+    daemon
+    chroot /opt/sengled/haproxy
+    user cloud
+    group cloud
+    quiet
+    pidfile /opt/sengled/haproxy/haproxy.pid
+    maxconn {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_maxconn" "5120"}}
+    nbproc {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_nbproc" "1"}}
+    
+defaults
+    mode http
+    option  httplog
+    option abortonclose
+    option httpclose
+    option dontlognull
+    option redispatch
+    timeout connect {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_conn_timeout" "5s"}}
+    timeout queue {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_queue_timeout" "5s"}}
+    timeout client {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_client_timeout" "30s"}}
+    timeout server {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_server_timeout" "30s"}}
+    timeout client-fin {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_client_fin_timeout" "30s"}}
+    timeout server-fin {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_server_fin_timeout" "30s"}}
+    timeout tunnel {{key_or_default "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ha_tunnel_timeout" "30s"}}
+
+listen haproxy_stats
+    bind 0.0.0.0:18000
+    option httplog
+    maxconn 10
+    stats   enable
+    stats   refresh  30s
+    stats   uri     /haproxy-stats
+    stats   realm   Haproxy manager
+    stats   auth    admin:!VQp7%!H
+    stats   hide-version
+	
+listen elk-service 
+    bind 127.0.0.1:30090
+    balance leastconn
+    option tcpka
+    mode   tcp
+    {{range service "elk"}}
+    server {{.Node}} {{.Address}}:6380{{end}}
+
+listen camera-service
+    bind 127.0.0.1:31000
+    balance leastconn
+    retries 2
+    option tcpka
+    mode   tcp
+    {{range service "camera"}}server {{.Node}} {{.Address}}:8080
+    {{end}}
+    
+    
+listen media-metrics 
+    bind 127.0.0.1:8080
+    balance leastconn
+    option tcpka
+    mode   tcp
+    server  media 127.0.0.1:8888
+
+listen old-message-server-service 
+    bind 127.0.0.1:31060
+    balance leastconn    
+    retries 2
+    option tcpka
+    mode   tcp
+    {{range service "old-message-server"}}server {{.Node}} {{.Address}}:8080
+    {{end}}
+    
+    
+# 新版本长连接
+listen inception-service 
+    bind 127.0.0.1:31200
+    balance leastconn    
+    retries 2
+    option tcpka
+    mode   tcp
+    {{range service "inception"}}server {{.Node}} {{.Address}}:8080
+    {{end}}
+    
+listen media-base-service
+    bind 127.0.0.1:31500
+    balance leastconn
+    option tcpka
+    mode   tcp
+    {{range service "media-base"}}server {{.Node}} {{.Address}}:8888
+    {{end}}

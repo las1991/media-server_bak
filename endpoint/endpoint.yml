@@ -1,0 +1,8 @@
+---
+os: linux
+version: 1.0
+appService: media-v3
+
+exec:
+  - type: private
+    port: 8888

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <title>Sengled Media Server (Java)</title>
+  <!-- Bootstrap core CSS -->
+  <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.css" rel="stylesheet" />
+  <!-- Just for debugging purposes. Don't actually copy this line! -->
+  <!--[if lt IE 9]>
+    <script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  <style type="text/css">
+        /*
+      * Style tweaks
+      * --------------------------------------------------
+      */
+        html,
+        body {
+            overflow-x: hidden; /* Prevent scroll on narrow devices */
+        }
+
+        body {
+            padding-top: 70px;
+        }
+
+        footer {
+            padding: 30px 0;
+        }
+
+        .container {
+          font-family: Consolas;
+        }
+        .log {
+         overflow-y:auto; height:560px;max-height: 560px;
+        }
+        .action {
+          text-align: center;
+          vertical-align: middle;
+        }
+
+        .action .btn {
+          padding:0px 12px;
+        }
+    </style>
+ </head>
+ <body>
+  <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+   <div class="container">
+    <div class="navbar-header">
+     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+     <a class="navbar-brand" href="/">Sengled Media Server <font style="font-size: xx-small;">(Java)</font></a>
+    </div>
+    <div class="collapse navbar-collapse">
+     <ul class="nav navbar-nav">
+      <li><a href="/">Home</a></li>
+      <li><a href="/media.html">Media</a></li>
+      <li><a href="/kinesis.html">Kinesis</a></li>
+      <li><a href="/websocket.html">MdFlags</a></li>
+      <li class="active"><a href="/about.html">About</a></li>
+     </ul>
+    </div>
+    <!-- /.nav-collapse -->
+   </div>
+   <!-- /.container -->
+  </div>
+  <!-- /.navbar -->
+  <div class="container">
+   <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">Sengled Media Server <span id="version"></span></div>
+        <div class="panel-body" style="text-indent: 2em">
+          <p>生迪专注于智能家居领域，从智能硬件、软件、云服务及大数据应用等方面深度研究，以智慧照明和智能家居为方向，为全球客户提供照明跨界产品、系统解决方案及云服务。依托LED照明作为载体，将各种感应单元和其它高附加值的功能，整合进LED灯泡和灯具中，进一步地结合创新型的人机交互方式，依托云服务和大数据分析，为智能家居和物联网提供智能硬件设备和服务。</p>
+        </div>
+
+        <!-- Table -->
+        <table class="table" id="servers">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Domain</th>
+              <th>Version</th>
+              <th>Memory(MB)</th>
+              <th>Connection</th>
+              <th>Cpu Load</th>
+              <th>Cpu Idle</th>
+              <th>Score</th>
+              <th class="action">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          <!-- 
+            <tr>
+              <th scope="row">1</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Larry</td>
+              <td>the Bird</td>
+              <td>@twitter</td>
+            </tr>
+             -->
+          </tbody>
+        </table>
+      </div>
+     </div>
+   </div>
+   <footer>
+    <p>&copy; Sengled 2016</p>
+   </footer>
+  </div>
+  <!--/.container-->
+  <!-- Bootstrap core JavaScript
+================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- metrics graphics -->
+  <script src="//cdn.bootcss.com/d3/4.2.2/d3.min.js"></script>
+  <script src="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.js"></script>
+  <script type="text/javascript">
+  function getQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)","i");
+      var r = window.location.search.substr(1).match(reg);
+      if (r!=null) return (r[2]); return null;
+   }
+
+  // version
+  $.get("/devops/version", function(version) {
+    if (version) {
+      $("#version").html(version);
+    }
+  });
+
+  // server 列表
+  $.get("/devops/servers", function(response){
+    var numRows = 0;
+    var sumConn = 0;
+    var sumCpuIdle = 0;
+    var sumCpuLoad = 0;
+    var sumMemory = 0;
+    var sumScore = 0;
+
+    var id = response.selected;
+    $(response.data).each(function(index, row){
+	   	if (!row.runtime || !row.metadata) {
+	   		console.log("{} illegal", row);
+	   		return;
+	   	}
+      numRows += 1;
+      sumConn += row.runtime.deviceNum;
+      sumCpuIdle += row.runtime.cpuIdle;
+      sumCpuLoad+= row.runtime.cpuLoad;
+      sumMemory += row.runtime.memory;
+      sumScore += row.score;
+
+      var className = "";
+      if(row.id == id) {
+        className = "success";
+      } else if (index % 2 == 1) {
+        className = "active";
+      }
+      var host = row.host;
+      var html;
+      html = ["<tr id='",row.metadata.id,"'", " class='", className, "'", " >"
+                  ,"<th scope='row'>",index+1,"</th>"
+                  ,"<td>",row.metadata.publicHost,"</td>"
+                  ,"<td>",row.metadata.version,"</td>"
+                  ,"<td>",row.runtime.memory,"</td>"
+                  ,"<td>",row.runtime.deviceNum,"</td>"
+                  ,"<td>",row.runtime.cpuLoad,"</td>"
+                  ,"<td>",row.runtime.cpuIdle,"</td>"
+                  ,"<td>",row.score,"</td>"
+                  ,"<td class='action'>"
+                  , "<a href='",host,"/index.html' target='blank' class='btn'>home</a>"
+                  , "<a href='",host,"/media.html' target='blank' class='btn'>media</a>"
+                  , "<a href='",host,"/about.html' target='blank' class='btn'>about</a>"
+                  , "</td>"
+                  ,"</tr>"];
+      var dom = $(html.join(""));
+      dom.appendTo("#servers tbody");
+    });
+
+    var html = ["<tr class='warning'>"
+                ,"<th>sum</th>"
+                ,"<td colspan='2'>", numRows,"</td>"
+                ,"<td>",sumMemory / numRows,"</td>"
+                ,"<td>",sumConn,"</td>"
+                ,"<td>",(sumCpuLoad / numRows).toPrecision(2),"</td>"
+                ,"<td>",(sumCpuIdle / numRows).toPrecision(2),"</td>"
+                ,"<td>",(sumScore / numRows).toPrecision(2),"</td>"
+                ,"<td colspan='1'></td>"
+                ,"</tr>"];
+
+    var dom = $(html.join(""));
+    dom.appendTo("#servers tbody");
+
+  });
+</script>
+ </body>
+</html>

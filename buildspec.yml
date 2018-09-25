@@ -1,0 +1,22 @@
+version: 0.1
+
+phases:
+  install:
+    commands:
+      - echo "Nothing to do in the install phase..."
+  pre_build:
+    commands:
+      - echo "Nothing to do in the pre_build phase..."
+  build:
+    commands:
+      - echo "Build begin with [`date`]"
+      - mvn install
+  post_build:
+    commands:
+      - echo "Build complete with [`date`]"
+
+artifacts:
+  files:
+    - source: src/java/mediaserver-assembly/target/media-v3-distribution.zip
+      destination: content/
+      action: unzip

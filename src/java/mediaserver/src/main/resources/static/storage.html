@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Sengled Media Server (Java)</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]>
+    <script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style type="text/css">
+        /*
+      * Style tweaks
+      * --------------------------------------------------
+      */
+        html,
+        body {
+            overflow-x: hidden; /* Prevent scroll on narrow devices */
+        }
+
+        body {
+            padding-top: 70px;
+        }
+
+        footer {
+            padding: 30px 0;
+        }
+
+        /*
+         * Off Canvas
+         * --------------------------------------------------
+         */
+        @media screen and (max-width: 767px) {
+            .row-offcanvas {
+                position: relative;
+                -webkit-transition: all .25s ease-out;
+                -moz-transition: all .25s ease-out;
+                transition: all .25s ease-out;
+            }
+
+            .row-offcanvas-right {
+                right: 0;
+            }
+
+            .row-offcanvas-left {
+                left: 0;
+            }
+
+            .row-offcanvas-right
+            .sidebar-offcanvas {
+                right: -50%; /* 6 columns */
+            }
+
+            .row-offcanvas-left
+            .sidebar-offcanvas {
+                left: -50%; /* 6 columns */
+            }
+
+            .row-offcanvas-right.active {
+                right: 50%; /* 6 columns */
+            }
+
+            .row-offcanvas-left.active {
+                left: 50%; /* 6 columns */
+            }
+
+            .sidebar-offcanvas {
+                position: absolute;
+                top: 0;
+                width: 50%; /* 6 columns */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span> <span
+                        class="icon-bar"></span> <span class="icon-bar"></span> <span
+                        class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Sengled Media Server <font
+                    style="font-size: xx-small;">(Java)</font></a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                
+                <li><a href="/">Home</a></li>
+                    <li><a href="/media.html">Media</a></li>
+                    <li><a href="/kinesis.html">Kinesis</a></li>
+                    <li  class="active"><a href="/storage.html">Storage</a></li>
+                    <li><a href="/websocket.html">MdFlags</a></li>
+                    <li><a href="/about.html">About</a></li> 
+                    
+                </ul>
+            </div>
+            <!-- /.nav-collapse -->
+        </div>
+        <!-- /.container -->
+    </div>
+    <!-- /.navbar -->
+
+
+    <div class="container">
+
+        <div class="row row-offcanvas row-offcanvas-right">
+            <div class="col-xs-16 col-sm-18">
+                <p class="pull-right visible-xs">
+                    <button type="button" class="btn btn-primary btn-xs"
+                        data-toggle="offcanvas">Toggle nav</button>
+                </p>
+                <!--/row-->
+
+
+                <div class="row">
+
+                    <div class="col-6 col-sm-4 col-lg-4">
+                        <h2>未上传文件数量</h2>
+                        <p id="notUploadFileNum"></p>
+                        <p class='col-lg-9 text-left ' id="notUploadFileNum-legend"></p>
+                    </div>
+ 
+
+                </div>
+                <!--/row-->
+
+
+
+
+            </div>
+            <!--/span-->
+        </div>
+        <!--/row-->
+
+        <hr>
+
+        <footer>
+            <p>&copy; Sengled 2016</p>
+        </footer>
+
+    </div>
+    <!--/.container-->
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+    <script src="//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- metrics graphics -->
+    <script src="//cdn.bootcss.com/d3/4.2.2/d3.min.js"></script>
+    <script
+        src="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.js"></script>
+    <script type="text/javascript">
+    mg_width = 350; // 适用于 1280px 的屏幕
+    mg_height = 250;
+    mg_right = 20;
+    mg_left = 40;
+    
+    // 自适应手机屏幕
+    if ((navigator.userAgent.match(/(iPhone|iPod|Android|ios|SymbianOS)/i))) {
+        maxWidth = window.screen.width;
+        mg_width = maxWidth - mg_left;
+    }
+
+
+
+        
+       
+    d3.json('/graphics/gauge?name=storage.notUploadFileNum&column=value', function(notUploadFileNum){
+        data = new Array();
+        data.push(MG.convert.date(notUploadFileNum, 'date', '%Y-%m-%d %H:%M:%S'));
+        
+        MG.data_graphic({
+          title : "单位：个",
+          description : "",
+          data : data,
+          width : mg_width ,
+          height : mg_height,
+          right :mg_right ,
+          left :mg_left,
+          target : document.getElementById('notUploadFileNum'),
+          legend: ['notUploadFileNum'],
+          legend_target: '#notUploadFileNum-legend',
+          aggregate_rollover: true
+        });
+     });      
+    
+    
+     </script>
+</body>
+
+</html>

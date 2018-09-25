@@ -1,0 +1,14 @@
+---
+os: linux
+version: 1.0
+appService: media-v3
+exec:
+  - name: media-v3-8888
+    type: http
+    value: http://127.0.0.1:8888/health
+    interval: 15
+    timeout: 15
+    pending: 120
+    healthy_threshold: 3
+    unhealthy_threshold: 3
+    failback: curl http://127.0.0.1:5000/service/media-v3?action=restart

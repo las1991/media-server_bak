@@ -1,0 +1,118 @@
+---
+os: linux
+version: 1.0
+appService: media-v3
+appVersion: APP_VERSION
+appType: normal-java
+
+files:
+  - source: config/haproxy.cfg.ctmpl
+    destination: /opt/sengled/haproxy/haproxy.cfg.ctmpl
+    mode: 644
+  - source: config/logstash_agent.conf
+    destination: /etc/logstash/conf.d/logstash_agent.conf
+    mode: 644
+  - source: config/sengled.properties.ctmpl
+    destination: /etc/sengled/sengled.properties.ctmpl
+    mode: 644
+  - source: endpoint
+    destination: /opt/sengled/apps/
+    mode: 755
+  - source: execenv
+    destination: /opt/sengled/apps/
+    mode: 755
+  - source: release_note
+    destination: /opt/sengled/apps/
+    mode: 755
+  - source: scripts
+    destination: /opt/sengled/apps/
+    mode: 755
+  - source: content
+    destination: /opt/sengled/apps/
+    mode: 755
+  - source: sql
+    destination: /opt/sengled/apps/    
+    mode: 755
+
+permissions:
+  - object: /opt/sengled/apps/scripts/
+    pattern: "**"
+    except:
+    group: root
+    owner: root
+    mode: 555
+    type:
+      - file
+  - object: /opt/sengled/apps/content/
+    pattern: haproxy
+    except:
+    group: cloud
+    owner: cloud
+    mode: 755
+    type:
+      - directory
+  - object: /opt/sengled/apps/content/haproxy/
+    pattern: haproxy
+    except:
+    group: root
+    owner: root
+    mode: 755
+    type:
+      - file
+  - object: /opt/sengled/apps/content/media-v3/bin/
+    pattern: "*.sh"
+    except:
+    group: root
+    owner: root
+    mode: 555
+    type:
+      - file
+  - object: /etc/
+    pattern: sengled
+    except:
+    owner: cloud
+    group: cloud
+    mode: 700
+    type:
+      - directory
+  - object: /var/log/
+    pattern: sengled
+    except: 
+    owner: cloud
+    group: cloud
+    mode: 755
+    type:
+      - directory
+hooks:
+  BeforeInstall:
+     - location: /opt/sengled/apps/scripts/BeforeInstall.sh
+       timeout: 180
+       runas: root
+  Install:
+     - location: /opt/sengled/apps/scripts/Install.sh 
+       timeout: 180
+       runas: root
+  AfterInstall:
+     - location: /opt/sengled/apps/scripts/AfterInstall.sh 
+       timeout: 180
+       runas: root
+  ApplicationStart:
+     - location: /opt/sengled/apps/scripts/ApplicationStart.sh 
+       timeout: 180
+       runas: root
+  ValidateService:
+     - location: /opt/sengled/apps/scripts/ValidateService.sh 
+       timeout: 180
+       runas: root
+  ApplicationStop:
+     - location: /opt/sengled/apps/scripts/ApplicationStop.sh 
+       timeout: 180
+       runas: root
+  ApplicationRestart:
+     - location: /opt/sengled/apps/scripts/ApplicationRestart.sh 
+       timeout: 240
+       runas: root
+  ApplicationReload:
+     - location: /opt/sengled/apps/scripts/ApplicationReload.sh 
+       timeout: 240
+       runas: root

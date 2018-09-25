@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+      <groupId>com.sengled.media.extentions</groupId>
+      <artifactId>sengled-mediaserver-extentions</artifactId>
+      <version>5.1.3</version>
+      <relativePath>../</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>sengled-algorithm</artifactId>
+    <name>algorithm</name>
+    
+    <dependencies>
+       <dependency>
+            <groupId>com.sengled.cloud</groupId>
+            <artifactId>mediabase-api</artifactId>
+            <version>${mediabase.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../../3rd/sengled-mediabase-api-${mediabase.version}.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-spi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sengled.media</groupId>
+            <artifactId>sengled-bootstrap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sengled.media.extentions</groupId>
+            <artifactId>sengled-kinesis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+
+</project>

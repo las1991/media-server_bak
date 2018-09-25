@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>Sengled Media Server (Java)</title>
+
+<!-- Bootstrap core CSS -->
+<link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+
+<!-- Just for debugging purposes. Don't actually copy this line! -->
+<!--[if lt IE 9]>
+    <script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<style type="text/css">
+/*
+      * Style tweaks
+      * --------------------------------------------------
+      */
+html, body {
+	overflow-x: hidden; /* Prevent scroll on narrow devices */
+}
+
+body {
+	padding-top: 70px;
+}
+
+footer {
+	padding: 30px 0;
+}
+
+.table-font thead {
+  font-size: 18px;
+}
+.table-font tbody {
+  font-size: 16px;
+  font-family: "Consolas";
+}
+
+
+</style>
+</head>
+
+<body>
+	<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="/">Sengled Media Server <font
+					style="font-size: xx-small;">(Java)</font></a>
+			</div>
+			<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+					<li><a href="/">Home</a></li>
+					<li class="active"><a href="/media.html">Media</a></li>
+					<li><a href="/kinesis.html">Kinesis</a></li>
+					<li><a href="/storage.html">Storage</a></li>
+                    <li><a href="/websocket.html">MdFlags</a></li>
+					<li><a href="/about.html">About</a></li> 
+				</ul>
+			</div>
+			<!-- /.nav-collapse -->
+		</div>
+		<!-- /.container -->
+	</div>
+	<!-- /.navbar -->
+
+	<div class="container">
+		<div class="fixed-table-toolbar">
+			<div class="columns columns-right btn-group pull-right">
+				<button class="btn btn-default" type="button" name="toggle"
+					title="Toggle">
+					<i class="glyphicon glyphicon-list-alt icon-list-alt"></i>
+				</button>
+				<div class="keep-open btn-group" title="Columns">
+					<button type="button" class="btn btn-default dropdown-toggle"
+						data-toggle="dropdown">
+						<i class="glyphicon glyphicon-th icon-th"></i> <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" role="menu">
+						<li><label><input data-field="0" value="0"
+								checked="checked" type="checkbox"> Name</label></li>
+						<li><label><input data-field="1" value="1"
+								checked="checked" type="checkbox"> Parameter</label></li>
+						<li><label><input data-field="2" value="2"
+								checked="checked" type="checkbox"> Description</label></li>
+						<li><label><input data-field="3" value="3"
+								checked="checked" type="checkbox"> Example</label></li>
+					</ul>
+				</div>
+			</div>
+			<div class="pull-right search">
+				<input class="form-control" placeholder="Search" type="text">
+			</div>
+		</div>
+		<div style="padding-bottom: 0px;" class="fixed-table-container">
+			<div style="display: none;" class="fixed-table-header">
+				<table></table>
+			</div>
+			<div class="fixed-table-body">
+				<div style="top: 42px;" class="fixed-table-loading">Loading,
+					please wait...</div>
+				<table class="table table-hover table-font" id="m" data-search="true" data-show-toggle="true" data-show-columns="true" data-mobile-responsive="true">
+					<thead>
+						<tr>
+							<th style="" data-field="0" tabindex="0">
+								<div class="th-inner ">Name</div>
+								<div class="fht-cell"></div>
+							</th>
+							<th style="" data-field="1" tabindex="0">
+								<div class="th-inner ">JoinIn</div>
+								<div class="fht-cell"></div>
+							</th>
+							<th style="" data-field="2" tabindex="0">
+								<div class="th-inner ">截图</div>
+								<div class="fht-cell"></div>
+							</th>
+							<th style="" data-field="3" tabindex="0">
+								<div class="th-inner ">算法</div>
+								<div class="fht-cell"></div>
+							</th>
+                            <th style="" data-field="4" tabindex="0">
+                                <div class="th-inner ">行人</div>
+                                <div class="fht-cell"></div>
+                            </th>
+                            <th style="" data-field="5" tabindex="0">
+                                <div class="th-inner ">录像</div>
+                                <div class="fht-cell"></div>
+                            </th>
+							<th style="" data-field="6" tabindex="0">
+								<div class="th-inner ">客户端</div>
+								<div class="fht-cell"></div>
+							</th>
+							<th style="text-align: center; vertical-align: middle;"
+								data-field="7" tabindex="0">
+								<div class="th-inner ">操作</div>
+								<div class="fht-cell"></div>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+				</table>
+			</div>
+			<div style="display: none;" class="fixed-table-footer">
+				<table>
+					<tbody>
+						<tr></tr>
+					</tbody>
+				</table>
+			</div>
+			<div style="display: none;" class="fixed-table-pagination"></div>
+		</div>
+
+		<hr>
+
+		<footer>
+			<p>&copy; Sengled 2016</p>
+		</footer>
+
+	</div>
+	<!--/.container-->
+
+
+	<!-- Bootstrap core JavaScript
+================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+
+
+    <script src="/js/sengled.js"></script>
+
+
+	<!-- metrics graphics -->
+	<script src="//cdn.bootcss.com/d3/3.5.17/d3.min.js"></script>
+	<script type="text/javascript">
+    function startRecord(token) {
+      $.ajax({
+        type : "GET",
+        url : "/media/startRecord?token=" + token,
+        success : function(message) {
+          console.log(message);
+          alert("成功!");
+          window.location.reload();
+        },
+        error : function(message) {
+          console.log(message);
+          alert("失败，详情请查看日志！");
+        }
+      });
+    }
+
+    function startCapturer(token) {
+      $.ajax({
+        type : "GET",
+        url : "/media/startCapturer?token=" + token,
+        success : function(message) {
+          console.log(message);
+          alert("成功!");
+          window.location.reload();
+        },
+        error : function(message) {
+          console.log(message);
+          alert("失败，详情请查看日志！");
+        }
+      });
+    }
+
+    function mdflags(token) {
+      window.open("/websocket.html?from=media&token=" + token);
+    }
+    
+    function reloadConfig(token) {
+      layer.open({
+        type: 2,
+        title:token,
+        //title: false, 
+        area: ['670px', '470px'],
+        fixed: true, //不固定
+        maxmin: false,
+        // btn: '全部关闭', 
+        closeBtn: 1,
+        yes: function(){
+          layer.closeAll();
+        },
+        zIndex: layer.zIndex, //重点1
+        shade: 0.2,
+        content: "/reloadConfig.html?args=" + token
+      }); 
+    }
+    function openMediaView (token) {
+      layer.open({
+        type: 2,
+        title:token,
+        //title: false, 
+        area: ['670px', '470px'],
+        fixed: true, //不固定
+        maxmin: false,
+        // btn: '全部关闭', 
+        closeBtn: 1,
+        yes: function(){
+          layer.closeAll();
+        },
+        zIndex: layer.zIndex, //重点1
+        shade: 0.2,
+        content: '/video-js.html?token=' + token
+      }); 
+    }
+    // 获取 table 内容
+    d3.json('/devops/streams', function(data) {
+      if (!data || data.length == 0) {
+        $("#m tbody").append(
+            '<tr data-index="0"><td colspan="8">暂无视频流</td></tr>');
+      } else {
+        $.each(data, function(i, val) {
+          console.log(data);
+          url = val["url"];
+          href = [];
+          href = href.concat(["&nbsp;<a href='javascript:void(0)'   onclick='mdflags(\"", val['name'], "\")'  title='md flags' >mdflags</a>&nbsp;"]);
+          href = href.concat(["&nbsp;<a href='javascript:void(0)'   onclick='reloadConfig(\"",  val['name'], "\")'  title='View Http Live'>reload</a>&nbsp;" ]);
+          href = href.concat(["&nbsp;<a href='javascript:void(0)'   onclick='openMediaView(\"",  val['name'], "\")'  title='View Http Live'>view</a>&nbsp;" ]);
+          // href = href.concat(["<a href='javascript:void(0)' title='start capturer' onclick='startCapturer(\"", val['name'], "\")'>Capturer</a>"]);
+          $("#m tbody").append(
+              '<tr data-index="' + i + '">' 
+                  + '<td style="" class="font">' + val['name'] + '</td>' 
+                  // + '<td style="" >' + val['userAgent'] + '</td>'
+                  + '<td style="" ><span>' + val['created'] + '</span></td>'
+                  + '<td style="" ><span>' + (val['services'].screenshot ? "√" : "-") + '</span></td>'
+                  + '<td style="" ><span>' + (val['services'].motion ? "√" : "-") + '</span></td>'
+                  + '<td style="" ><span>' + (val['services'].object ? "√" : "-") + '</span></td>'
+                  + '<td style="" ><span>' + (val['services'].storage ? "√" : "-") + '</span></td>'
+                  + '<td style="" ><span>' + (val['sinks'].length) + '</span></td>'
+                  + '<td style="text-align: center; vertical-align: middle;" >' + href.join("")
+                  + '</td>' + '</tr>');
+        });
+      }
+
+      $(".fixed-table-loading").html("Load Finish!");
+    });
+  </script>
+</body>
+</html>

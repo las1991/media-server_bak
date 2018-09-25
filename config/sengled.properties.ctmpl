@@ -1,0 +1,33 @@
+[DEFAULT]
+PUBLIC_IPV4=$PUBLIC_IPV4
+PRIVATE_IPV4=$PRIVATE_IPV4
+
+#consul_http_url
+consul_http_url={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/consul_http_url"}}
+
+#redis
+MEDIA_REDIS_ADDR={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_REDIS_ADDR"}}
+MEDIA_REDIS_PORT={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_REDIS_PORT"}}
+MEDIA_REDIS_PWD={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_REDIS_PWD"}}
+MEDIA_REDIS_DB={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_REDIS_DB"}}
+
+
+# the aws config
+MEDIA_AWS_REGION={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_AWS_REGION"}}
+MEDIA_SQS_DEVICE_SETUP={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_SQS_DEVICE_SETUP"}}
+
+#MEDIA_DYNAMO_DEVICE_STATUS
+MEDIA_KINESIS_CAPTURER={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_KINESIS_CAPTURER"}}
+MEDIA_KINESIS_ALGORITHM={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_KINESIS_ALGORITHM"}}
+
+#MEDIA_DYNAMO_M3_SECURITY
+#MEDIA_DYNAMO_M3_SECURITY_ITEM
+AWS_ROUTE53_HOSTED_ZONE_ID={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/AWS_ROUTE53_HOSTED_ZONE_ID"}}
+
+# zipkin server
+ZIPKIN_SERVER={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/ZIPKIN_SERVER"}}
+
+# storage
+MEDIA_DYNAMO_M3_STORAGE={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_DYNAMO_M3_STORAGE"}}
+MEDIA_DYNAMO_M3_STORAGE_ITEM={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/MEDIA_DYNAMO_M3_STORAGE_ITEM"}}
+aws_video_bucket={{key "deploy/deployGroup/DEPLOY_GROUP_NAME/config/aws_video_bucket"}}

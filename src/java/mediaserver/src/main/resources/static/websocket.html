@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head> 
+  <meta charset="utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+  <meta name="description" content="" /> 
+  <meta name="author" content="" /> 
+  <title>Sengled Media Server (Java)</title> 
+  <!-- Bootstrap core CSS --> 
+  <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" /> 
+  <link href="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.css" rel="stylesheet" /> 
+  <!-- Just for debugging purposes. Don't actually copy this line! --> 
+  <!--[if lt IE 9]>
+    <script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]--> 
+  <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries --> 
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]--> 
+  <style type="text/css">
+        /*
+      * Style tweaks
+      * --------------------------------------------------
+      */
+        html,
+        body {
+            overflow-x: hidden; /* Prevent scroll on narrow devices */
+        }
+
+        body {
+            padding-top: 70px;
+        }
+
+        footer {
+            padding: 30px 0;
+        }
+
+
+        .log {
+         overflow-y:auto; height:560px;max-height: 560px;
+        }
+    </style> 
+ </head> 
+ <body> 
+  <div class="navbar navbar-fixed-top navbar-inverse" role="navigation"> 
+   <div class="container"> 
+    <div class="navbar-header"> 
+     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> 
+     <a class="navbar-brand" href="/">Sengled Media Server <font style="font-size: xx-small;">(Java)</font></a> 
+    </div> 
+    <div class="collapse navbar-collapse"> 
+     <ul class="nav navbar-nav"> 
+      <li><a href="/">Home</a></li> 
+      <li><a href="/media.html">Media</a></li> 
+      <li><a href="/kinesis.html">Kinesis</a></li> 
+      <li><a href="/storage.html">Storage</a></li>
+      <li class="active"><a href="/websocket.html">MdFlags</a></li> 
+      <li><a href="/about.html">About</a></li> 
+     </ul> 
+    </div>
+    <!-- /.nav-collapse --> 
+   </div>
+   <!-- /.container --> 
+  </div>
+  <!-- /.navbar --> 
+  <div class="container"> 
+   <div class="row"> 
+    <div class="col-lg-6">
+     <div class="input-group "> 
+     <span class="input-group-btn"> <button class="btn btn-link openPlayer" type="button" >flash-player</button> </span>
+      </div>
+    </div> 
+    <div class="col-lg-6"> 
+     <div class="input-group search-group mdflags"> 
+      <input type="text" class="form-control" placeholder="input snap token ..." /> 
+      <span class="input-group-btn"> <button class="btn btn-success start" type="button">start</button>
+      <button class="btn btn-danger stop" type="button">stop</button></span> 
+     </div>
+     <!-- /input-group --> 
+    </div>
+    <!-- /.col-lg-6 --> 
+   </div>
+   
+   
+   <!-- /.row --> 
+   <div class="row"> 
+    <div class="col-md-12" role="main"> 
+     <p></p> 
+     <div class="bs-docs-section"> 
+      <figure class="highlight  log"> 
+       <pre><code class="language-html" data-lang="html" id="data"><span class="nt">web socket logs</span></code></pre> 
+      </figure> 
+     </div> 
+    </div> 
+   </div> 
+   <footer> 
+    <p>&copy; Sengled 2016</p> 
+   </footer> 
+  </div>
+  <!--/.container--> 
+  <!-- Bootstrap core JavaScript
+================================================== --> 
+  <!-- Placed at the end of the document so the pages load faster --> 
+  <script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script> 
+  <script src="//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
+  <!-- metrics graphics --> 
+  <script src="//cdn.bootcss.com/d3/4.2.2/d3.min.js"></script> 
+  <script src="//cdn.bootcss.com/metrics-graphics/2.10.1/metricsgraphics.min.js"></script> 
+  <script type="text/javascript">
+  function getQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)","i");
+      var r = window.location.search.substr(1).match(reg);
+      if (r!=null) return (r[2]); return null;
+   }
+  
+  // 打开播放器
+  $(".openPlayer").click(function() {
+    var token = $(".search-group input").val().trim();
+    if (token) {
+      window.open("/video-js.html?token=" + token);
+    } else {
+      alert("please input snap token");
+    }
+  });
+  
+  // 开始查看 md flags
+  $(".mdflags .start").click(function(){
+    var token = $(".search-group input").val().trim();
+    if (token) {
+      ws.send(token);
+      
+      ws.onmessage = function(msg){
+        $("#data").append('<br/><span class="nt">' + msg.data + '</span>');
+        if($("#data").children().length > 2000) {
+          $("#data br:lt(3)").remove();
+          $("#data span:lt(3)").remove();
+        }
+        
+        var height = $(".log code").height();
+        $(".log").scrollTop(height);
+        
+      };
+    } else {
+      alert("please input snap token");
+    }
+  });
+
+  // 停止查看 md flags
+  $(".mdflags .stop").click(function(){
+    ws.send("close");
+  });
+  
+    var ws = new WebSocket("ws://" + window.location.host + "/mdflags");
+    ws.onclose = function() {
+      $("#data").append('<br/><span class="nt">websocket closed</span>');
+    }
+    ws.onopen = function() {
+      var token = getQueryString("token");
+      if (token) {
+        $(".search-group input").val(token);
+        $(".mdflags .start").click();
+      }
+    }
+</script>   
+ </body>
+</html>

@@ -1,0 +1,7 @@
+======= sengled-media-bootstrap v3.1.0 ================
+media-server:
+1、JDK 升级到 8
+2、集成 JavaScript 脚本引擎用于处理截图业务
+3、增加 flv 直播功能 
+4、版本号从 3.1 开始
+
