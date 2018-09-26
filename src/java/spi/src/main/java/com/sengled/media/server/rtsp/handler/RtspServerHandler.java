@@ -186,8 +186,6 @@ public class RtspServerHandler extends SimpleChannelInboundHandler<FullHttpReque
             response.setStatus(HttpResponseStatus.BAD_GATEWAY);
             final Object message = null != servlet ? servlet : "handshak failed";
             LOGGER.error("{}: {}", message, ex.getMessage(), ex);
-        } finally {
-            request.release();
         }
 
         // set session id
