@@ -1,91 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 
-<!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
-<property name="LOG_HOME" value="/var/log/sengled" />
-<property name="APP_NAME" value="media-server" />
-<property name="DEVOPS_LOG_HOME" value="/var/log/service" />
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{0}:%line - %msg%n</pattern>
+        </encoder>
+    </appender>
 
+    <!-- 日志输出级别 -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
 
-<!-- 控制台输出 -->
-<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-    <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
-    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{0}:%line - %msg%n</pattern>
-    </encoder>
-</appender>
+    <logger level="DEBUG" name="com.sengled.media.server">
+    </logger>
 
-<!-- 访问日志 -->
-<appender name="AccessLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-        <FileNamePattern>
-            ${LOG_HOME}/${APP_NAME}-access-%d{yyyy-MM-dd}.log
-        </FileNamePattern>
-        <maxHistory>7</maxHistory>
-    </rollingPolicy>
-    <layout class="ch.qos.logback.classic.PatternLayout">
-        <pattern>
-            %msg%n
-        </pattern>
-    </layout>
-</appender>
-
-<!-- 按照每天生成日志文件 -->
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">   
-    <file>${LOG_HOME}/${APP_NAME}.log</file>   
-
-    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{0}:%line - %msg%n</pattern>
-    </encoder>
-    
-    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">   
-      <fileNamePattern>${LOG_HOME}/${APP_NAME}.%i.log.zip</fileNamePattern>   
-      <minIndex>1</minIndex>   
-      <maxIndex>30</maxIndex>   
-    </rollingPolicy>   
-   
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">   
-      <maxFileSize>50MB</maxFileSize>   
-    </triggeringPolicy>   
-  </appender> 
-
-<!-- 运维日志 -->
-<appender name="DevOps" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-        <FileNamePattern>
-            ${DEVOPS_LOG_HOME}/${APP_NAME}-%d{yyyy-MM-dd}.log
-        </FileNamePattern>
-        <maxHistory>7</maxHistory>
-    </rollingPolicy>
-    <layout class="ch.qos.logback.classic.PatternLayout">
-        <pattern>
-            %msg%n
-        </pattern>
-    </layout>
-</appender>
-
-<!-- 日志输出级别 -->
-<root level="INFO" >
-    <appender-ref ref="STDOUT" />
-    <appender-ref ref="FILE" />
-</root>
-
-
-<logger level="INFO" name="DevOps">
-    <appender-ref ref="DevOps" />
-</logger>
-
-<logger level="INFO" name="org.eclipse.jetty.server.RequestLog">
-    <appender-ref ref="AccessLog" />
-</logger>
-
-<!-- 修正时间戳 -->
-<logger level="INFO" name="com.sengled.media.dispatcher">
-</logger>
-
-<logger level="DEBUG" name="com.sengled.media.server.rtsp">
-</logger>
-<!-- 修正时间戳 -->
-<logger level="DEBUG" name="io.netty">
-</logger>
 </configuration>
