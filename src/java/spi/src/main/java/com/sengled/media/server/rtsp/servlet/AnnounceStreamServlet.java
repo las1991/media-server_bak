@@ -1,10 +1,9 @@
 package com.sengled.media.server.rtsp.servlet;
 
-import com.sengled.media.server.rtsp.InterleavedFrame;
-import com.sengled.media.server.rtsp.RtspServerContext;
-import com.sengled.media.server.rtsp.RtspSession;
-import com.sengled.media.server.rtsp.Transport;
+import com.sengled.media.server.rtsp.*;
 import com.sengled.media.server.rtsp.rtp.MediaDescriptionParserFactory;
+import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpDecoder;
+import com.sengled.media.server.rtsp.rtp.handler.RtpHandler;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 import com.sengled.media.server.rtsp.sdp.SdpParser;
 import com.sengled.media.url.URLObject;
@@ -20,11 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sdp.MediaDescription;
-import javax.sdp.SdpException;
 import javax.sdp.SessionDescription;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.Vector;
+
+import static com.sengled.media.server.rtsp.RtspServer.EXECUTOR_GROUP;
 
 /**
  * 处理 RTSP 上行请求
@@ -36,7 +36,14 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
 
     private RtspServerContext serverContext;
     private RtspOverTcpSource source;
+    private RtspMediaSink mediaSink;
+
+    private String sdp;
     private SessionDescription sd;
+
+    private RtpDePacketizer<?>[] rtpDePacketizers;
+    private RtspSession session;
+
     private boolean recorded;
 
     public AnnounceStreamServlet(RtspServerContext serverContext, ChannelHandlerContext channelHandlerContext) {
@@ -50,12 +57,13 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
         URLObject url = URLObject.parse(request.getUri());
 
         ChannelHandlerContext channelHandlerContext = getChannelHandlerContext();
-        String sdp = request.content().toString(Charset.forName("UTF-8"));
+        this.sdp = request.content().toString(Charset.forName("UTF-8"));
         try {
-            this.sd = SdpParser.parse(sdp);
-            RtpDePacketizer<?>[] rtpStreams = MediaDescriptionParserFactory.parse(sd);
-            this.source = new RtspOverTcpSource(channelHandlerContext, serverContext, url, rtpStreams);
-        } catch (ParseException | SdpException e) {
+            this.sd = SdpParser.parse(this.sdp);
+            this.rtpDePacketizers = MediaDescriptionParserFactory.parse(this.sd);
+            this.session = new RtspSession(url);
+            this.mediaSink = new DefaultRtspMediaSink(serverContext, session, rtpDePacketizers, channelHandlerContext);
+        } catch (ParseException e) {
             // SDP 异常了
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             LOGGER.error("[{}] bad sdp {}", url.getUrl(), sdp);
@@ -65,7 +73,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
     @Override
     public void setup(FullHttpRequest request, FullHttpResponse response) {
         // 必须先调用 announce
-        if (null == source) {
+        if (null == mediaSink) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             LOGGER.error("call setup before announce, uri = {}, agent = {}", request.getUri(), request.headers().get(HttpHeaders.Names.USER_AGENT));
             return;
@@ -91,7 +99,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
                 String control = md.getAttribute("control");
 
                 if (StringUtils.equals(streamName, FilenameUtils.getName(control))) {
-                    source.setTransport(i, t);
+                    rtpDePacketizers[i].setTransport(t);
                     response.headers().add(RtspHeaders.Names.TRANSPORT, t.toString());
                     return;
                 }
@@ -111,12 +119,14 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
     @Override
     public void record(FullHttpRequest request, FullHttpResponse response) {
         if (recorded) {
-            LOGGER.warn("[{}] record again", source.getToken());
+            LOGGER.warn("[{}] record again", session.getToken());
             return;
         }
 
-        if (null != source) {
-            source.start();
+        if (null != mediaSink) {
+            getChannelHandlerContext().pipeline().addBefore("rtspDecoder", "rtpDecoder", new RtpOverTcpDecoder());
+            getChannelHandlerContext().pipeline().addLast(EXECUTOR_GROUP, "rtpHandler", new RtpHandler(mediaSink));
+            mediaSink.start();
             recorded = true;
         } else {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
@@ -131,7 +141,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
         if (null != source && StringUtils.startsWith(key, "CameraConnectStatus")) {
             LOGGER.info("{}:{}", request.getUri(), request.content().toString(Charset.defaultCharset()));
             HttpResponseStatus status = HttpResponseStatus.OK;
-            final String result = null != source.getMediaSink(RtspOverTcpSink.class) ? "ok" : "noSinks";
+            final String result = null != mediaSink.getMediaSink(RtspOverTcpSink.class) ? "ok" : "noSinks";
             String content = "CameraConnectStatus:" + result; // 必须得有空格
 
             response.setStatus(status);
@@ -148,7 +158,9 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
     @Override
     public void destroy() {
         try {
-            source.close();
+            if (mediaSink != null) {
+                mediaSink.close();
+            }
         } finally {
             close();
         }
@@ -170,7 +182,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
 
     @Override
     public RtspSession getSession() {
-        return null != source ? source.getSession() : null;
+        return session;
     }
 
     @Override
