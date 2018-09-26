@@ -53,17 +53,19 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
 
     @Override
     public void onRtp(RtpPacket rtpPacket) {
-
-        for (RtpDePacketizer dePacketizer :
-                rtpDePacketizers) {
-            if (!(null != dePacketizer && dePacketizer.isOK())) {
-                continue;
+        try {
+            for (RtpDePacketizer dePacketizer :
+                    rtpDePacketizers) {
+                if (!(null != dePacketizer && dePacketizer.isOK())) {
+                    continue;
+                }
+                if (dePacketizer.getRtpChannel() == rtpPacket.getChannel()) {
+                    onRtpReceive(dePacketizer, rtpPacket);
+                }
             }
-            if (dePacketizer.getRtpChannel() == rtpPacket.getChannel()) {
-                onRtpReceive(dePacketizer, rtpPacket);
-            }
+        } finally {
+            rtpPacket.release();
         }
-
     }
 
     @Override
@@ -128,8 +130,7 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
 
     @Override
     public void start() {
-        String token = session.getToken();
-
+        final String token = session.getToken();
         this.serverContext.addMediaSource(token, this);
     }
 

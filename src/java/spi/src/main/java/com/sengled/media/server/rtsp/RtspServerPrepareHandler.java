@@ -65,5 +65,11 @@ public class RtspServerPrepareHandler extends ChannelInboundHandlerAdapter {
         }
 
         ctx.pipeline().remove(this);
+        ctx.fireChannelRead(msg);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
     }
 }

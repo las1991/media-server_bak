@@ -1,11 +1,7 @@
 package com.sengled.media.server.rtsp.rtp.handler;
 
-import com.sengled.media.server.rtsp.DefaultRtspMediaSink;
 import com.sengled.media.server.rtsp.RtspMediaSink;
-import com.sengled.media.server.rtsp.RtspServerContext;
-import com.sengled.media.server.rtsp.RtspSession;
 import com.sengled.media.server.rtsp.rtp.RtpPacket;
-import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
@@ -21,22 +17,15 @@ public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RtpHandler.class);
 
-    private final RtspServerContext serverContext;
-    private final RtspSession session;
-    private final RtpDePacketizer<?>[] rtpDePacketizers;
+    private final RtspMediaSink rtspMediaSink;
 
-    private RtspMediaSink rtspMediaSink;
-
-    public RtpHandler(RtspServerContext serverContext, RtspSession session, RtpDePacketizer<?>[] rtpDePacketizers) {
-        this.serverContext = serverContext;
-        this.session = session;
-        this.rtpDePacketizers = rtpDePacketizers;
+    public RtpHandler(RtspMediaSink rtspMediaSink) {
+        this.rtspMediaSink = rtspMediaSink;
     }
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         super.handlerAdded(ctx);
-        this.rtspMediaSink = new DefaultRtspMediaSink(serverContext, session, rtpDePacketizers, ctx);
         rtspMediaSink.start();
     }
 
@@ -62,7 +51,6 @@ public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
 
             }
         });
-
         rtspMediaSink.onRtp(rtpPacket.retain());
     }
 
