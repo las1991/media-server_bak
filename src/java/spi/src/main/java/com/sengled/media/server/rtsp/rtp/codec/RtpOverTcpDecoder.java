@@ -1,6 +1,5 @@
 package com.sengled.media.server.rtsp.rtp.codec;
 
-import com.sengled.media.server.rtsp.IllegalFrame;
 import com.sengled.media.server.rtsp.rtp.RtpOverTcpPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -34,56 +33,57 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        while (in.readableBytes() > 0 && state == STATE.READ_FIRST_BYTE) {
-            switch (state) {
-                case READ_FIRST_BYTE:
-                    byte ch = in.readByte();
-                    if (ch != DOLLAR) {
-                        in.readerIndex(in.readerIndex() - 1);
-                        // 非法的数据
-                        out.add(new IllegalFrame(in.readSlice(in.readableBytes()).retain()));
-                        break;
-                    }
-                    state = STATE.READ_RTP_CHANNEL;
-
-                case READ_RTP_CHANNEL:
-                    if (in.readableBytes() < 1) {
-                        break;
-                    }
-                    channel = in.readUnsignedByte();
-                    state = STATE.READ_RTP_LENGTH;
-
-                case READ_RTP_LENGTH:
-                    if (in.readableBytes() < 2) {
-                        break;
-                    }
-                    length = in.readUnsignedShort();
-                    if (channel % 2 == 0) {
-                        state = STATE.READ_RTP;
-                    } else {
-                        state = STATE.READ_RTCP;
-                    }
-
-                case READ_RTP:
-                    if (in.readableBytes() >= length) {
-                        RtpOverTcpPacket packet = decode0(in.readSlice(length).retain());
-                        if (null != packet) {
-                            out.add(packet);
-                        }
-                        state = STATE.READ_FIRST_BYTE;
-                    }
+        switch (state) {
+            case READ_FIRST_BYTE:
+                byte ch = in.readByte();
+                if (ch != DOLLAR) {
+                    in.readerIndex(in.readerIndex() - 1);
+                    // 不是rtp包
+                    ctx.fireChannelRead(in);
                     break;
-                case READ_RTCP:
-                    //TODO 解码rtcp
+                }
+                state = STATE.READ_RTP_CHANNEL;
 
+            case READ_RTP_CHANNEL:
+                if (in.readableBytes() < 1) {
+                    break;
+                }
+                channel = in.readUnsignedByte();
+                state = STATE.READ_RTP_LENGTH;
+
+            case READ_RTP_LENGTH:
+                if (in.readableBytes() < 2) {
+                    break;
+                }
+                length = in.readUnsignedShort();
+                if (channel % 2 == 0) {
+                    state = STATE.READ_RTP;
+                } else {
+                    state = STATE.READ_RTCP;
+                }
+
+            case READ_RTP:
+                if (in.readableBytes() >= length) {
+                    RtpOverTcpPacket packet = decode0(in.readSlice(length).retain());
+                    if (null != packet) {
+                        out.add(packet);
+                    }
+                    state = STATE.READ_FIRST_BYTE;
+                }
+                break;
+            case READ_RTCP:
+                //TODO 解码rtcp
+                if (in.readableBytes() >= length) {
                     ByteBuf rtcp = in.readSlice(length);
 
                     LOGGER.info("read rtcp packet {}", ByteBufUtil.hexDump(rtcp));
                     rtcp.release();
-                    break;
+                    state = STATE.READ_FIRST_BYTE;
+                }
 
-                default:
-            }
+                break;
+
+            default:
         }
 
     }
