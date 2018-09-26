@@ -50,7 +50,7 @@ public class MediaServer {
                 DevOpsConfiguration.class,
                 AuthicationConfiguration.class,
                 MediaServerConfiguration.class,
-                StorageServer.class,
+//                StorageServer.class,
                 AlgorithmConfiguration.class,
         }, args);
         
