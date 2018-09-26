@@ -6,9 +6,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.eventbus.EventBus;
 import com.sengled.media.event.Event;
 import com.sengled.media.server.http.handler.HttpServletHandler;
-import com.sengled.media.server.rtsp.codec.RtspObjectDecoder;
-import com.sengled.media.server.rtsp.codec.RtspObjectEncoder;
 import com.sengled.media.server.rtsp.handler.RtspServerHandler;
+import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpEncoder;
 import com.sengled.media.ssl.SSL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -18,9 +17,11 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.rtsp.RtspDecoder;
+import io.netty.handler.codec.rtsp.RtspEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -49,13 +50,13 @@ public class RtspServer {
     private Meter outboundIoMeter;
 
 
-    private final int numBossThreads = 1;
+    private final int numBossThreads = Runtime.getRuntime().availableProcessors();
     private final int maxWorkerThreads = RTSP.SERVER_MAX_WORKER_THREADS;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     public final static EventExecutorGroup EXECUTOR_GROUP =
             new DefaultEventExecutorGroup(
-                    RTSP.SERVER_MAX_WORKER_THREADS,
+                    RTSP.SERVER_MAX_WORKER_THREADS * 2,
                     new DefaultThreadFactory("netty-executor", Thread.MAX_PRIORITY));
     private final Class<? extends ServerChannel> channelClass;
 
@@ -244,6 +245,7 @@ public class RtspServer {
                             // ssl
                             if (config.isUseSSL()) {
                                 pipeline.addLast(SSL.newHandler(ch.alloc()));
+                                pipeline.addLast(new RtspServerPrepareHandler());
                             }
 
                             // 流量统计
@@ -252,10 +254,6 @@ public class RtspServer {
 
                             // idle 事件
                             pipeline.addLast("IDEL_STATE_HANDLER", idleStateHandler);
-
-
-                            // 选择协议
-                            pipeline.addLast(new RtspServerPrepareHandler());
 
                             if (config.isUseHTTPProtocol()) {
                                 pipeline.addLast(new HttpRequestDecoder());
@@ -266,11 +264,12 @@ public class RtspServer {
 
                             // 使用 RTSP 协议
                             if (config.isUseRTSPProtocol()) {
-                                pipeline.addLast(new RtspDecoder());
-                                pipeline.addLast(new RtspServerHandler(server.serverContext, config.getMethods()));
+                                pipeline.addLast("rtspDecoder", new RtspDecoder());
+                                pipeline.addLast(new HttpObjectAggregator(1048576));
+                                pipeline.addLast("rtspEncoder", new RtspEncoder());
+                                pipeline.addLast("rtpEncoder", new RtpOverTcpEncoder());
+                                pipeline.addLast("rtspHandler", new RtspServerHandler(server.serverContext, config.getMethods()));
                             }
-
-                            pipeline.addLast(new RtspServerPrepareHandler());
                         }
                     });
 
