@@ -2,6 +2,7 @@ package com.sengled.media.server.rtsp.rtp;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -177,5 +178,26 @@ public abstract class RtpPacket implements SourceRtpPacket {
         return content.release(decrement);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder()
+                .append("RtpPacket{")
+                .append(" version=").append(version)
+                .append(", padding=").append(padding)
+                .append(", extension=").append(extension)
+                .append(", cc=").append(cc)
+                .append(", marker=").append(marker)
+                .append(", payloadType=").append(payloadType)
+                .append(", seqNumber=").append(seqNumber)
+                .append(", time=").append(time)
+                .append(", syncSource=").append(syncSource)
+                .append(", cSources=").append(cSources)
+                .append(", profile=").append(profile)
+                .append(", headerExtensionLength=").append(headerExtensionLength)
+                .append(", headerExtension=").append(Arrays.toString(headerExtension))
+                .append(", content=").append(content)
+                .append('}');
+        return buf.toString();
 
+    }
 }
