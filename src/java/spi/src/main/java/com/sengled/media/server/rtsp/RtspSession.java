@@ -7,11 +7,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 
 /**
- * 一个 rtsp 会话。 <p> <p> <ul> <li>1、通过 {@link #onRtpEvent(RtpPkt)} 把流数据分发给他的监听者</li> <li>2、通过 {@link
- * #getSessionDescription()} 获取 SDP 信息</li> </ul>
- *
- * @author 陈修恒
- * @date 2016年4月15日
+ * 一个 rtsp 会话
  */
 public class RtspSession implements MediaSession {
     final private long lastModified = System.currentTimeMillis();
@@ -44,14 +40,11 @@ public class RtspSession implements MediaSession {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("{").append(getClass().getSimpleName());
-        buf.append(" ");
-        buf.append(", created=").append(DateFormatUtils.format(lastModified, "yyyy-MM-dd HH:mm:ss.SSS"));
-
-        buf.append("}");
-        return buf.toString();
+        return "RtspSession{" +
+                "lastModified='" + DateFormatUtils.format(lastModified, "yyyy-MM-dd HH:mm:ss.SSS") + '\'' +
+                ", token='" + token + '\'' +
+                ", url=" + url +
+                ", sessionId='" + sessionId + '\'' +
+                '}';
     }
-
-
 }
