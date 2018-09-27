@@ -17,7 +17,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.RecyclableArrayList;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,13 +186,14 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
     public Future<Void> close() {
         // 从上下文中移除
         try {
-            serverContext.removeMediaSource(getToken(), this);
+            boolean success = serverContext.removeMediaSource(getToken(), this);
+            if (success) {
+                dispatcher.close();
 
-            dispatcher.close();
-
-            for (RtpDePacketizer dePacketizer :
-                    rtpDePacketizers) {
-                dePacketizer.close();
+                for (RtpDePacketizer dePacketizer :
+                        rtpDePacketizers) {
+                    dePacketizer.close();
+                }
             }
         } catch (IOException e) {
 
