@@ -1,16 +1,17 @@
 package com.sengled.media.server;
 
-import com.sengled.media.server.rtsp.InterleavedFrame;
 import com.sengled.media.server.rtsp.RtspSession;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+
+import java.io.Closeable;
 
 /**
  * 处理基于文本协议的流媒体服务
  *
  * @author chenxh
  */
-public interface RtspServlet {
+public interface RtspServlet extends Closeable {
 
     void announce(FullHttpRequest request, FullHttpResponse response);
 
@@ -31,18 +32,6 @@ public interface RtspServlet {
     void teardown(FullHttpRequest request, FullHttpResponse response);
 
     void setParameter(FullHttpRequest request, FullHttpResponse response);
-
-    /**
-     * 处理 rtsp 上传的数据
-     *
-     * @param frame
-     */
-    void channelRead(InterleavedFrame frame);
-
-    /**
-     * 关闭 Servlet
-     */
-    void destroy();
 
     RtspSession getSession();
 }
