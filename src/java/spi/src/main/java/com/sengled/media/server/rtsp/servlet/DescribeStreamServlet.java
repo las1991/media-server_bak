@@ -4,7 +4,6 @@ import com.sengled.media.MediaCodec;
 import com.sengled.media.MediaSource;
 import com.sengled.media.StreamContext;
 import com.sengled.media.server.MediaCodecExtra;
-import com.sengled.media.server.rtsp.InterleavedFrame;
 import com.sengled.media.server.rtsp.RtspServerContext;
 import com.sengled.media.server.rtsp.RtspSession;
 import com.sengled.media.server.rtsp.Transport;
@@ -34,6 +33,7 @@ import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
 import javax.sdp.SdpException;
 import javax.sdp.SessionDescription;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -61,7 +61,6 @@ public class DescribeStreamServlet extends RtspServletAdapter {
 
     public DescribeStreamServlet(RtspServerContext serverContext, ChannelHandlerContext channelHandlerContext) {
         super(channelHandlerContext);
-
         this.serverContext = serverContext;
     }
 
@@ -129,7 +128,7 @@ public class DescribeStreamServlet extends RtspServletAdapter {
          * a=control:rtsp://101.68.222.221:554/ABE801222C0E9F722A0587480EE7E642.sdp/streamid=1
          */
         try {
-            InetSocketAddress socketAddress = (InetSocketAddress) getChannelHandlerContext().channel().remoteAddress();
+            InetSocketAddress socketAddress = (InetSocketAddress) getCtx().channel().remoteAddress();
             final String netType = "IN";
             final String addressType = "IP4";
             final String address = socketAddress.getAddress().getHostAddress();
@@ -240,19 +239,8 @@ public class DescribeStreamServlet extends RtspServletAdapter {
             return;
         }
 
-        sink = new RtspOverTcpSink(getChannelHandlerContext(), source, rtpPacketizers);
+        sink = new RtspOverTcpSink(getCtx(), source, rtpPacketizers);
         sink.start();
-    }
-
-    @Override
-    public void channelRead(InterleavedFrame frame) {
-        try {
-            if (null != sink) {
-                sink.channelRead(frame.retain());
-            }
-        } finally {
-            frame.release();
-        }
     }
 
     @Override
@@ -260,27 +248,22 @@ public class DescribeStreamServlet extends RtspServletAdapter {
         return session;
     }
 
+
     @Override
-    public void destroy() {
-        try {
-            if (null != sink) {
-                sink.close();
-                sink = null;
-            }
-        } finally {
-            close();
+    public void close() throws IOException {
+        if (null != sink) {
+            sink.close();
+            sink = null;
         }
     }
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("{").append(getClass().getSimpleName());
-        buf.append(", token=").append(session.getToken());
-        buf.append(", ").append(getChannelHandlerContext().channel().remoteAddress());
-        buf.append("}");
-        return buf.toString();
+        return "DescribeStreamServlet{" +
+                "serverContext=" + serverContext +
+                ", session=" + session +
+                ", rtpPacketizers=" + Arrays.toString(rtpPacketizers) +
+                ", sink=" + sink +
+                '}';
     }
-
-    ;
 }

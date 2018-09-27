@@ -239,7 +239,7 @@ public abstract class StreamingMediaSink extends ChannelHandlerContextHolder imp
     }
 
     
-    private static enum State {
+    private enum State {
         WAIT_KEY,
         WRITABLE,
         BUFFER_FULL;
