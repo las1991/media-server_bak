@@ -187,11 +187,13 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
     public Future<Void> close() {
         // 从上下文中移除
         try {
+            serverContext.removeMediaSource(getToken(), this);
+
             dispatcher.close();
+
             for (RtpDePacketizer dePacketizer :
                     rtpDePacketizers) {
                 dePacketizer.close();
-                IOUtils.closeQuietly(dePacketizer);
             }
         } catch (IOException e) {
 
