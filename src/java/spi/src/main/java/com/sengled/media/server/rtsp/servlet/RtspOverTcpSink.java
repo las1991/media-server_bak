@@ -37,42 +37,6 @@ public class RtspOverTcpSink extends StreamingMediaSink implements MediaSink {
         this.rtpPacketizers = rtpPacketizers;
     }
 
-    public void setTransport(int streamIndex, Transport t) {
-        rtpPacketizers[streamIndex].setTransport(t);
-    }
-
-
-    public void channelRead(InterleavedFrame frame) {
-        try {
-            for (RtpPacketizer<?> rtpStream : rtpPacketizers) {
-                if (!isOK(rtpStream)) {
-                    continue;
-                }
-
-                // rtcp
-                if (rtpStream.getRtcpChannel() == frame.channel()) {
-                    RtcpPacket rtcpPacket = new RtcpPacket();
-                    int offset = 0;
-                    byte[] bytes = frame.toBytes();
-                    while (offset < bytes.length) {
-                        offset = rtcpPacket.decode(bytes, offset);
-                    }
-
-                    rtpStream.getStatistics().onRtcpReceive(rtcpPacket);
-                    LOGGER.debug("{}", rtcpPacket);
-                    return;
-                }
-
-                // rtp, 视频播放支持 rtp
-                if (rtpStream.getRtpChannel() == frame.channel()) {
-                    return;
-                }
-            }
-        } finally {
-            frame.release();
-        }
-    }
-
     private boolean isOK(RtpPacketizer<?> rtpStream) {
         return null != rtpStream && rtpStream.isOK();
     }
@@ -146,6 +110,5 @@ public class RtspOverTcpSink extends StreamingMediaSink implements MediaSink {
         buf.append("}");
         return buf.toString();
     }
-
 
 }
