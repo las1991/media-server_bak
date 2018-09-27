@@ -27,8 +27,8 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
 
     private STATE state = STATE.READ_FIRST_BYTE;
 
-    private short channel;
-    private int length;
+    short channel;
+    int length;
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -68,7 +68,7 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
 
             case READ_RTP:
                 if (in.readableBytes() >= length) {
-                    RtpOverTcpPacket packet = decode0(in.readSlice(length).retain());
+                    RtpOverTcpPacket packet = decodeRtp(in.readSlice(length).retain());
                     if (null != packet) {
                         out.add(packet);
                     }
@@ -89,6 +89,10 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
 
             default:
         }
+
+    }
+
+    protected void decodeRtcp(ByteBuf data) {
 
     }
 
@@ -117,7 +121,7 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
      * @return
      * @author las
      */
-    public RtpOverTcpPacket decode0(ByteBuf data) {
+    public RtpOverTcpPacket decodeRtp(ByteBuf data) {
         try {
             int byte0, byte1, byte2, byte3;
             byte0 = data.readUnsignedByte();

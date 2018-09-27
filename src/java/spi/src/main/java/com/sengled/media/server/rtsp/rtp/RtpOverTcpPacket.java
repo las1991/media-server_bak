@@ -11,11 +11,11 @@ import java.util.List;
  */
 public class RtpOverTcpPacket extends RtpPacket {
 
-    private int channel;
+    private FramingPacket framingPacket;
 
-    public RtpOverTcpPacket(int channel, ByteBuf content, int version, boolean padding, boolean extension, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources, int profile, int headerExtensionLength, byte[] headerExtension) {
+    public RtpOverTcpPacket(FramingPacket framingPacket, ByteBuf content, int version, boolean padding, boolean extension, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources, int profile, int headerExtensionLength, byte[] headerExtension) {
         super(content, version, padding, extension, cc, marker, payloadType, seqNumber, time, syncSource, cSources, profile, headerExtensionLength, headerExtension);
-        this.channel = channel;
+        this.framingPacket = channel;
     }
 
     private RtpOverTcpPacket(ByteBuf content, RtpPacket that) {
@@ -25,7 +25,7 @@ public class RtpOverTcpPacket extends RtpPacket {
 
     @Override
     public int getChannel() {
-        return channel;
+        return framingPacket.getChannel();
     }
 
     @Override

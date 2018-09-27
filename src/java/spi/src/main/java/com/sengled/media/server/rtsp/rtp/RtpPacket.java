@@ -1,6 +1,7 @@
 package com.sengled.media.server.rtsp.rtp;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,9 +30,7 @@ import java.util.List;
  * @author las
  * @date 18-9-20
  */
-public abstract class RtpPacket implements SourceRtpPacket {
-
-    private ByteBuf content;
+public abstract class RtpPacket extends DefaultByteBufHolder implements SourceRtpPacket {
 
     protected int version;
     protected boolean padding;
@@ -51,7 +50,7 @@ public abstract class RtpPacket implements SourceRtpPacket {
     protected byte[] headerExtension;
 
     public RtpPacket(ByteBuf content, int version, boolean padding, boolean extension, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources, int profile, int headerExtensionLength, byte[] headerExtension) {
-        this.content = content;
+        super(content);
         this.version = version;
         this.padding = padding;
         this.extension = extension;
@@ -78,7 +77,7 @@ public abstract class RtpPacket implements SourceRtpPacket {
      * @param that
      */
     protected RtpPacket(ByteBuf content, RtpPacket that) {
-        this.content = content;
+        super(that.content());
         this.version = that.version;
         this.padding = that.padding;
         this.extension = that.extension;
@@ -146,37 +145,6 @@ public abstract class RtpPacket implements SourceRtpPacket {
         return headerExtension;
     }
 
-    @Override
-    public ByteBuf content() {
-        return content;
-    }
-
-    @Override
-    public int refCnt() {
-        return content.refCnt();
-    }
-
-    @Override
-    public RtpPacket retain() {
-        content.retain();
-        return this;
-    }
-
-    @Override
-    public RtpPacket retain(int increment) {
-        content.retain(increment);
-        return this;
-    }
-
-    @Override
-    public boolean release() {
-        return content.release();
-    }
-
-    @Override
-    public boolean release(int decrement) {
-        return content.release(decrement);
-    }
 
     @Override
     public String toString() {
@@ -195,7 +163,7 @@ public abstract class RtpPacket implements SourceRtpPacket {
                 .append(", profile=").append(profile)
                 .append(", headerExtensionLength=").append(headerExtensionLength)
                 .append(", headerExtension=").append(Arrays.toString(headerExtension))
-                .append(", content=").append(content)
+                .append(", content=").append(content())
                 .append('}');
         return buf.toString();
 
