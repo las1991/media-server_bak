@@ -7,6 +7,7 @@ import com.google.common.eventbus.EventBus;
 import com.sengled.media.event.Event;
 import com.sengled.media.server.http.handler.HttpServletHandler;
 import com.sengled.media.server.rtsp.handler.RtspServerHandler;
+import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpDecoder;
 import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpEncoder;
 import com.sengled.media.ssl.SSL;
 import io.netty.bootstrap.ServerBootstrap;
@@ -126,13 +127,18 @@ public class RtspServer {
         @Override
         public void write(ChannelHandlerContext ctx,
                           Object msg,
-                          ChannelPromise promise) throws Exception {
+                          ChannelPromise promise) {
             final ByteBuf buf = (ByteBuf) msg;
             final int writableBytes = buf.readableBytes();
 
             ctx.write(msg, promise);
 
             server.outboundIoMeter.mark(8 * writableBytes);
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            LOGGER.error("{}", cause.getMessage(), cause);
         }
     }
 
@@ -145,7 +151,7 @@ public class RtspServer {
         }
 
         @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        public void channelActive(ChannelHandlerContext ctx) {
             ctx.fireChannelActive();
 
             // 新来一个连接
@@ -153,7 +159,7 @@ public class RtspServer {
         }
 
         @Override
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        public void channelInactive(ChannelHandlerContext ctx) {
             ctx.fireChannelInactive();
 
             // 断开了一个连接
@@ -162,7 +168,7 @@ public class RtspServer {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx,
-                                Object msg) throws Exception {
+                                Object msg) {
             final ByteBuf buf = (ByteBuf) msg;
             final int readableBytes = buf.readableBytes();
 
@@ -264,10 +270,11 @@ public class RtspServer {
 
                             // 使用 RTSP 协议
                             if (config.isUseRTSPProtocol()) {
-                                pipeline.addLast("rtspDecoder", new RtspDecoder());
-                                pipeline.addLast(new HttpObjectAggregator(1048576));
-                                pipeline.addLast("rtspEncoder", new RtspEncoder());
+                                pipeline.addLast("rtpDecoder", new RtpOverTcpDecoder());
                                 pipeline.addLast("rtpEncoder", new RtpOverTcpEncoder());
+                                pipeline.addLast("rtspDecoder", new RtspDecoder());
+                                pipeline.addLast("rtspEncoder", new RtspEncoder());
+                                pipeline.addLast(new HttpObjectAggregator(1048576));
                                 pipeline.addLast("rtspHandler", new RtspServerHandler(server.serverContext, config.getMethods()));
                             }
                         }
