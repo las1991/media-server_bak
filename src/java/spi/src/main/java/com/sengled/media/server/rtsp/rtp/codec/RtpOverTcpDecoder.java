@@ -30,6 +30,10 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
     private short channel;
     private int length;
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        LOGGER.error("{}", cause.getMessage(), cause);
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -39,7 +43,7 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
                 if (ch != DOLLAR) {
                     in.readerIndex(in.readerIndex() - 1);
                     // 不是rtp包
-                    ctx.fireChannelRead(in);
+                    ctx.fireChannelRead(in.retain());
                     break;
                 }
                 state = STATE.READ_RTP_CHANNEL;
@@ -74,7 +78,7 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
             case READ_RTCP:
                 //TODO 解码rtcp
                 if (in.readableBytes() >= length) {
-                    ByteBuf rtcp = in.readSlice(length);
+                    ByteBuf rtcp = in.readSlice(length).retain();
 
                     LOGGER.info("read rtcp packet {}", ByteBufUtil.hexDump(rtcp));
                     rtcp.release();
