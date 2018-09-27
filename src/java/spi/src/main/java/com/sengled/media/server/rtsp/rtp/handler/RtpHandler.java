@@ -20,6 +20,7 @@ public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
     private final RtspMediaSink rtspMediaSink;
 
     public RtpHandler(RtspMediaSink rtspMediaSink) {
+        super(false);
         this.rtspMediaSink = rtspMediaSink;
     }
 
