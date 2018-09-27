@@ -39,7 +39,6 @@ public class RtspServerHandler extends SimpleChannelInboundHandler<FullHttpReque
 
     private final RtspServerContext serverContext;
 
-    private ChannelHandlerContext channelContext;
     private RtspServlet servlet;
     private Set<HttpMethod> options;
 
@@ -77,12 +76,12 @@ public class RtspServerHandler extends SimpleChannelInboundHandler<FullHttpReque
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        channelContext = ctx;
+
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        destroyChannelServlet();
+        closeServlet();
     }
 
     @Override
@@ -97,32 +96,23 @@ public class RtspServerHandler extends SimpleChannelInboundHandler<FullHttpReque
         } else {
             LOGGER.error("{}", error, cause);
         }
-
-        destroyChannelServlet();
+        closeServlet();
     }
 
-    private void destroyChannelServlet() {
-        try {
-            if (null != servlet) {
-                servlet.destroy();
-                servlet = null;
+    private void closeServlet() {
+        if (null != servlet) {
+            try {
+                servlet.close();
+            } catch (IOException e) {
+                LOGGER.error("{} close servlet fail with {}", servlet.getSession(), e.getMessage());
             }
-        } finally {
-            if (null != channelContext) {
-                channelContext.close()
-                        .addListener(new GenericFutureListener<Future<? super Void>>() {
-                            @Override
-                            public void operationComplete(Future<? super Void> future)
-                                    throws Exception {
-                                channelContext = null;
-                            }
-                        });
-            }
+            servlet = null;
         }
     }
 
+
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
         HttpMethod method = request.getMethod();
 
         if (LOGGER.isDebugEnabled()) {
@@ -136,22 +126,7 @@ public class RtspServerHandler extends SimpleChannelInboundHandler<FullHttpReque
             if (RtspMethods.OPTIONS.equals(method)) {
                 response.headers().add(RtspHeaders.Names.PUBLIC, getOptionString());
             } else if (TEARDOWN.equals(method)) {
-                response.setStatus(HttpResponseStatus.OK);
-                response.headers().add(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
-
-                // 如果有 servelet， 则自动 teardown
-                RtspServlet thisServlet = this.servlet;
-                if (null != thisServlet) {
-                    thisServlet.teardown(request, response);
-                    promise.addListener(new GenericFutureListener<Future<? super Void>>() {
-                        @Override
-                        public void operationComplete(Future<? super Void> future) throws Exception {
-                            thisServlet.destroy();
-                            LOGGER.info("{} teardown", thisServlet);
-                        }
-                    });
-                    this.servlet = null;
-                }
+                servlet.teardown(request, response);
             } else if (ANNOUNCE.equals(method) && null == servlet) {
                 servlet = new AnnounceStreamServlet(serverContext, ctx);
                 servlet.announce(request, response);
