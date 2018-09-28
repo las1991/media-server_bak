@@ -2,7 +2,7 @@ package com.sengled.media.server.rtsp.servlet;
 
 import com.sengled.media.server.rtsp.*;
 import com.sengled.media.server.rtsp.rtp.MediaDescriptionParserFactory;
-import com.sengled.media.server.rtsp.rtp.handler.RtpHandler;
+import com.sengled.media.server.rtsp.rtp.handler.InteleavedRtpHandler;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 import com.sengled.media.server.rtsp.sdp.SdpParser;
 import com.sengled.media.url.URLObject;
@@ -123,7 +123,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
         }
 
         if (null != mediaSink) {
-            getCtx().pipeline().addAfter(EXECUTOR_GROUP, "rtpDecoder", "rtpHandler", new RtpHandler(mediaSink));
+            getCtx().pipeline().addAfter(EXECUTOR_GROUP, "rtpDecoder", "rtpHandler", new InteleavedRtpHandler(mediaSink));
             mediaSink.start();
             recorded = true;
         } else {

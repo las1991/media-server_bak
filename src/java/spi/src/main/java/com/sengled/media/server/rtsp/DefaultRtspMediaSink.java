@@ -9,8 +9,8 @@ import com.sengled.media.event.EventType;
 import com.sengled.media.event.SessionEvent;
 import com.sengled.media.server.MutableFramePacket;
 import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
+import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
 import com.sengled.media.server.rtsp.rtp.MutableRtpPacket;
-import com.sengled.media.server.rtsp.rtp.RtpPacket;
 import com.sengled.media.server.rtsp.rtp.RtpPacketI;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 import io.netty.channel.ChannelHandlerContext;
@@ -51,7 +51,7 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
     }
 
     @Override
-    public void onRtp(RtpPacket rtpPacket) {
+    public void onRtp(InterleavedRtpPacket rtpPacket) {
         try {
             for (RtpDePacketizer dePacketizer :
                     rtpDePacketizers) {
@@ -74,15 +74,15 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
     }
 
 
-    private void onRtpReceive(RtpDePacketizer<?> dePacketizer, RtpPacket rtpPacket) {
-        MutableRtpPacket rtp = new MutableRtpPacket(rtpPacket.content());
-        rtp.setFlags(rtpPacket.getProfile());
-        rtp.setMarker(rtpPacket.isMarker());
-        rtp.setPayloadType(rtpPacket.getPayloadType());
-        rtp.setSeqNumber(rtpPacket.getSeqNumber());
-        rtp.setSyncSource(rtpPacket.getSyncSource());
-        rtp.setTime(rtpPacket.getTime());
-        rtp.setVersion(rtpPacket.getVersion());
+    private void onRtpReceive(RtpDePacketizer<?> dePacketizer, InterleavedRtpPacket rtpPacket) {
+        MutableRtpPacket rtp = new MutableRtpPacket(rtpPacket.payload().content());
+        rtp.setFlags(rtpPacket.profile());
+        rtp.setMarker(rtpPacket.marker());
+        rtp.setPayloadType(rtpPacket.payloadType());
+        rtp.setSeqNumber(rtpPacket.seqNumber());
+        rtp.setSyncSource(rtpPacket.SSRC());
+        rtp.setTime(rtpPacket.time());
+        rtp.setVersion(rtpPacket.version());
         onRtpReceive(dePacketizer, rtp);
     }
 

@@ -7,6 +7,8 @@ import com.google.common.eventbus.EventBus;
 import com.sengled.media.event.Event;
 import com.sengled.media.server.http.handler.HttpServletHandler;
 import com.sengled.media.server.rtsp.handler.RtspServerHandler;
+import com.sengled.media.server.rtsp.rtcp.codec.InterleavedRtcpDecoder;
+import com.sengled.media.server.rtsp.rtp.codec.InterleavedRtpDecoder;
 import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpDecoder;
 import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpEncoder;
 import com.sengled.media.ssl.SSL;
@@ -270,8 +272,11 @@ public class RtspServer {
 
                             // 使用 RTSP 协议
                             if (config.isUseRTSPProtocol()) {
-                                pipeline.addLast("rtpDecoder", new RtpOverTcpDecoder());
+                                pipeline.addLast("rtpOverTcpDecoder", new RtpOverTcpDecoder());
+                                pipeline.addLast("rtpDecoder", new InterleavedRtpDecoder());
+                                pipeline.addLast("rtcpDecoder", new InterleavedRtcpDecoder());
                                 pipeline.addLast("rtpEncoder", new RtpOverTcpEncoder());
+
                                 pipeline.addLast("rtspDecoder", new RtspDecoder());
                                 pipeline.addLast("rtspEncoder", new RtspEncoder());
                                 pipeline.addLast(new HttpObjectAggregator(1048576));

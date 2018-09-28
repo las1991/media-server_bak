@@ -2,7 +2,7 @@ package com.sengled.media.server.rtsp;
 
 import com.sengled.media.MediaSource;
 import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
-import com.sengled.media.server.rtsp.rtp.RtpPacket;
+import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
 
 /**
  * @author las
@@ -10,7 +10,7 @@ import com.sengled.media.server.rtsp.rtp.RtpPacket;
  */
 public interface RtspMediaSink extends MediaSource {
 
-    void onRtp(RtpPacket rtpPacket);
+    void onRtp(InterleavedRtpPacket rtpPacket);
 
     void onRtcp(RtcpPacket rtcpPacket);
 }

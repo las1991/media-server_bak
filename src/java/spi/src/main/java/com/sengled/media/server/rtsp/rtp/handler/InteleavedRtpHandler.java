@@ -1,7 +1,7 @@
 package com.sengled.media.server.rtsp.rtp.handler;
 
 import com.sengled.media.server.rtsp.RtspMediaSink;
-import com.sengled.media.server.rtsp.rtp.RtpPacket;
+import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
@@ -13,13 +13,13 @@ import java.util.concurrent.Callable;
  * @author las
  * @date 18-9-19
  */
-public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
+public class InteleavedRtpHandler extends SimpleChannelInboundHandler<InterleavedRtpPacket> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RtpHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InteleavedRtpHandler.class);
 
     private final RtspMediaSink rtspMediaSink;
 
-    public RtpHandler(RtspMediaSink rtspMediaSink) {
+    public InteleavedRtpHandler(RtspMediaSink rtspMediaSink) {
         super(false);
         this.rtspMediaSink = rtspMediaSink;
     }
@@ -37,7 +37,7 @@ public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RtpPacket rtpPacket) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, InterleavedRtpPacket rtpPacket) throws Exception {
         //TODO 比较性能
         ctx.channel().eventLoop().submit(new Callable<Void>() {
             @Override
@@ -52,7 +52,7 @@ public class RtpHandler extends SimpleChannelInboundHandler<RtpPacket> {
 
             }
         });
-        rtspMediaSink.onRtp(rtpPacket.retain());
+        rtspMediaSink.onRtp(rtpPacket);
     }
 
 }
