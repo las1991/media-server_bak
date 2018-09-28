@@ -1,9 +1,7 @@
 package com.sengled.media.server.rtsp.rtp;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,142 +28,93 @@ import java.util.List;
  * @author las
  * @date 18-9-20
  */
-public abstract class RtpPacket extends DefaultByteBufHolder implements SourceRtpPacket {
+public class RtpPacket extends DefaultByteBufHolder implements RtpHeader, RtpBody {
 
-    protected int version;
-    protected boolean padding;
-    protected boolean extension;
-    protected int cc;
-    protected boolean marker;
+    private final RtpHeader header;
+    private final RtpPayload payload;
 
-    protected int payloadType;
-    protected int seqNumber;
-
-    protected long time;
-    protected long syncSource;
-    protected List<Long> cSources;
-
-    protected int profile;
-    protected int headerExtensionLength;
-    protected byte[] headerExtension;
-
-    public RtpPacket(ByteBuf content, int version, boolean padding, boolean extension, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources, int profile, int headerExtensionLength, byte[] headerExtension) {
-        super(content);
-        this.version = version;
-        this.padding = padding;
-        this.extension = extension;
-        this.cc = cc;
-        this.marker = marker;
-        this.payloadType = payloadType;
-        this.seqNumber = seqNumber;
-        this.time = time;
-        this.syncSource = syncSource;
-        this.cSources = cSources;
-        this.profile = profile;
-        this.headerExtensionLength = headerExtensionLength;
-        this.headerExtension = headerExtension;
-    }
-
-    public RtpPacket(ByteBuf content, int version, boolean padding, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources) {
-        this(content, version, padding, false, cc, marker, payloadType, seqNumber, time, syncSource, cSources, 0, 0, null);
-    }
-
-    /**
-     * copy 时使用
-     *
-     * @param content
-     * @param that
-     */
-    protected RtpPacket(ByteBuf content, RtpPacket that) {
-        super(that.content());
-        this.version = that.version;
-        this.padding = that.padding;
-        this.extension = that.extension;
-        this.cc = that.cc;
-        this.marker = that.marker;
-        this.payloadType = that.payloadType;
-        this.seqNumber = that.seqNumber;
-        this.time = that.time;
-        this.syncSource = that.syncSource;
-        this.cSources = that.cSources;
-        this.profile = that.profile;
-        this.headerExtensionLength = that.headerExtensionLength;
-        this.headerExtension = that.headerExtension;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public boolean isPadding() {
-        return padding;
-    }
-
-    public boolean isExtension() {
-        return extension;
-    }
-
-    public int getCc() {
-        return cc;
-    }
-
-    public boolean isMarker() {
-        return marker;
-    }
-
-    public int getPayloadType() {
-        return payloadType;
-    }
-
-    public int getSeqNumber() {
-        return seqNumber;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public long getSyncSource() {
-        return syncSource;
-    }
-
-    public List<Long> getcSources() {
-        return cSources;
-    }
-
-    public int getProfile() {
-        return profile;
-    }
-
-    public int getHeaderExtensionLength() {
-        return headerExtensionLength;
-    }
-
-    public byte[] getHeaderExtension() {
-        return headerExtension;
+    public RtpPacket(RtpHeader header, RtpPayload payload) {
+        super(payload.content());
+        this.header = header;
+        this.payload = payload;
     }
 
 
     @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder()
-                .append("RtpPacket{")
-                .append(" version=").append(version)
-                .append(", padding=").append(padding)
-                .append(", extension=").append(extension)
-                .append(", cc=").append(cc)
-                .append(", marker=").append(marker)
-                .append(", payloadType=").append(payloadType)
-                .append(", seqNumber=").append(seqNumber)
-                .append(", time=").append(time)
-                .append(", syncSource=").append(syncSource)
-                .append(", cSources=").append(cSources)
-                .append(", profile=").append(profile)
-                .append(", headerExtensionLength=").append(headerExtensionLength)
-                .append(", headerExtension=").append(Arrays.toString(headerExtension))
-                .append(", content=").append(content())
-                .append('}');
-        return buf.toString();
+    public RtpPayload payload() {
+        return payload;
+    }
 
+    @Override
+    public int version() {
+        return header.version();
+    }
+
+    @Override
+    public boolean padding() {
+        return header.padding();
+    }
+
+    @Override
+    public boolean extension() {
+        return header.extension();
+    }
+
+    @Override
+    public int cc() {
+        return header.cc();
+    }
+
+    @Override
+    public boolean marker() {
+        return header.marker();
+    }
+
+    @Override
+    public int payloadType() {
+        return header.payloadType();
+    }
+
+    @Override
+    public int seqNumber() {
+        return header.seqNumber();
+    }
+
+    @Override
+    public long time() {
+        return header.time();
+    }
+
+    @Override
+    public long SSRC() {
+        return header.SSRC();
+    }
+
+    @Override
+    public List<Long> CSRC() {
+        return header.CSRC();
+    }
+
+    @Override
+    public int profile() {
+        return header.profile();
+    }
+
+    @Override
+    public int extensionLength() {
+        return header.extensionLength();
+    }
+
+    @Override
+    public byte[] extensionHeader() {
+        return header.extensionHeader();
+    }
+
+    @Override
+    public String toString() {
+        return "RtpPacket{" +
+                "header=" + header +
+                ", payload=" + payload +
+                '}';
     }
 }
