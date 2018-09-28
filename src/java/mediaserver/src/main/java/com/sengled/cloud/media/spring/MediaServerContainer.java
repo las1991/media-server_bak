@@ -97,7 +97,7 @@ public class MediaServerContainer implements SmartLifecycle {
         if (null != config && config.getPort() > 0) {
             final int port = config.getPort();
             server.listen(RtspServerConfig.newInstance(config.isSsl())
-                    .withMethods(config.getMethods().split(","))
+                    .withMethods(config.isSupportedRtsp() ? config.getMethods().split(",") : new String[]{})
                     .withPort(port)
                     .withHttpProtocol(config.isSupportedHttp())
                     .withRtspProtocol(config.isSupportedRtsp()));
