@@ -265,6 +265,7 @@ public class RtspServer {
 
                             if (config.isUseHTTPProtocol()) {
                                 pipeline.addLast(new HttpRequestDecoder());
+                                pipeline.addLast(new HttpObjectAggregator(1048576));
                                 pipeline.addLast(new HttpResponseEncoder());
                                 pipeline.addLast(new HttpServletHandler(server.getServerContext()));
 
