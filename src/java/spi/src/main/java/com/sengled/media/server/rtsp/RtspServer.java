@@ -272,11 +272,15 @@ public class RtspServer {
 
                             // 使用 RTSP 协议
                             if (config.isUseRTSPProtocol()) {
+                                //rtpOverTcp
                                 pipeline.addLast("rtpOverTcpDecoder", new RtpOverTcpDecoder());
+                                pipeline.addLast("rtpOverTcpEncoder", new RtpOverTcpEncoder());
+
+                                //rtp,rtcp
                                 pipeline.addLast("rtpDecoder", new InterleavedRtpDecoder());
                                 pipeline.addLast("rtcpDecoder", new InterleavedRtcpDecoder());
-                                pipeline.addLast("rtpEncoder", new RtpOverTcpEncoder());
 
+                                //rtsp
                                 pipeline.addLast("rtspDecoder", new RtspDecoder());
                                 pipeline.addLast("rtspEncoder", new RtspEncoder());
                                 pipeline.addLast(new HttpObjectAggregator(1048576));
