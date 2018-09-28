@@ -304,13 +304,13 @@ public class FlvOutputEncoder extends NettySupport {
             if (streamContext.getCodec() == MediaCodec.G711) {
                 continue;
             }
-            
+
             // SPEEX
             if (streamContext.getCodec() == MediaCodec.SPEEX) {
                 continue;
             }
-            
-            
+
+
             LOGGER.warn("{} unsupported", streamContext.getCodec());
         }
     }
@@ -421,8 +421,8 @@ public class FlvOutputEncoder extends NettySupport {
             // pre tag size
             out.writeInt(tagHeaderSize + dataSize);
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("tag[{}], pts = {}, size = {}", tagType, DateFormatUtils.formatUTC(pts, "HH:mm:ss.SSS"), dataSize);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("tag[{}], pts = {}, size = {}", tagType, DateFormatUtils.formatUTC(pts, "HH:mm:ss.SSS"), dataSize);
             }
         } finally {
             tagData.release();

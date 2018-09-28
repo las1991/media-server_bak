@@ -18,6 +18,7 @@ package com.sengled.media.server.rtsp.rtp.packetizer.h264;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sengled.media.FramePacket.Flags;
@@ -32,7 +33,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 
 
-
 /**
  * Implements <tt>Codec</tt> to represent a depacketizer of H.264 RTP packets
  * into NAL units.
@@ -40,8 +40,7 @@ import io.netty.util.ReferenceCountUtil;
  * @author Lyubomir Marinov
  * @author Damian Minkov
  */
-public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRecord>
-{
+public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRecord> {
 
     private static final int MAX_FRAME_PACKET_SIZE = 1 * 1024 * 1024;
 
@@ -62,7 +61,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
      * structure contains the first NAL unit of an access unit in decoding
      * order".
      */
-    public static final byte[] NAL_PREFIX = { 0, 0, 0, 1 };
+    public static final byte[] NAL_PREFIX = {0, 0, 0, 1};
 
     /**
      * Constants used to detect H264 keyframes in rtp packet
@@ -91,7 +90,6 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
     private static final int UNSPECIFIED_NAL_UNIT_TYPE = 0;
 
 
-
     /**
      * Keeps track of last (input) sequence number in order to avoid
      * inconsistent data.
@@ -118,17 +116,19 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
      * FU-A 组合包， 当遇到一个 start_bit 后有效
      */
     private MutableFramePacket fuaFramePacket;
-    
+
     private ByteBuffer sps;
     private ByteBuffer pps;
     private ByteBuffer sei;
-    
+
     private int packetizationMode;
+
     /**
      * Initializes a new <tt>DePacketizer</tt> instance which is to depacketize
      * H.264 RTP packets into NAL units.
-     * @param ctx 
-     * @param alloc 
+     *
+     * @param ctx
+     * @param alloc
      */
     public H264DePacketizer(int streamIndex, AVCDecoderConfigurationRecord extra, Rational timeunit) {
         super(streamIndex, MediaCodec.H264, extra, timeunit);
@@ -137,19 +137,19 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
     /**
      * Extracts a fragment of a NAL unit from a specific FU-A RTP packet
      * payload.
-     * @param in the payload of the RTP packet from which a FU-A fragment of a
-     * NAL unit is to be extracted
-     * @param inOffset the offset in <tt>in</tt> at which the payload begins
-     * @param inLength the length of the payload in <tt>in</tt> beginning at
-     * <tt>inOffset</tt>
+     *
+     * @param in             the payload of the RTP packet from which a FU-A fragment of a
+     *                       NAL unit is to be extracted
+     * @param inOffset       the offset in <tt>in</tt> at which the payload begins
+     * @param inLength       the length of the payload in <tt>in</tt> beginning at
+     *                       <tt>inOffset</tt>
      * @param fuaFramePacket the <tt>Buffer</tt> which is to receive the extracted
-     * FU-A fragment of a NAL unit
+     *                       FU-A fragment of a NAL unit
      * @return the flags such as <tt>BUFFER_PROCESSED_OK</tt> and
      * <tt>OUTPUT_BUFFER_NOT_FILLED</tt> to be returned by
      * {@link #process(Buffer, Buffer)}
      */
-    private int dePacketizeFUA(List<Object> out, ByteBuf in, int profile, RtpPacketI rtp)
-    {
+    private int dePacketizeFUA(List<Object> out, ByteBuf in, int profile, RtpPacketI rtp) {
         int ret = 0;
         byte fu_indicator = in.readByte();
         byte fu_header = in.readByte();
@@ -163,11 +163,11 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
         if (start_bit) {
             LOGGER.trace("FUA nal:{},time:{} start", nal_unit_type, rtp.getTime());
             ret |= H264_START;
-        	/*
-        	 * 把之前收到的 RTP 数据整合成一个不完整的数据包 flush 出去
-        	 */
-        	flushImcompleteFrame(out);
-        	
+            /*
+             * 把之前收到的 RTP 数据整合成一个不完整的数据包 flush 出去
+             */
+            flushImcompleteFrame(out);
+
             /*
              * The Start bit and End bit MUST NOT both be set in the same FU
              * header.
@@ -181,24 +181,24 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
 
             if (nal_unit_type == kIdr) {
                 ret |= H264_KEY;
-            	fuaFramePacket.addFlag(Flags.KEY_FRAME);
-            	
-        		setKeyFrameExtra(fuaFramePacket);
+                fuaFramePacket.addFlag(Flags.KEY_FRAME);
+
+                setKeyFrameExtra(fuaFramePacket);
             }
 
             int octet = (fu_indicator & 0xE0) /* forbidden_zero_bit & NRI */
                     | nal_unit_type;
-            
+
             // Copy in the NAL start sequence and the (reconstructed) octet.
-        	fuaFramePacket.writeBytes(NAL_PREFIX);
-        	fuaFramePacket.writeByte(octet & 0xFF);
-        } 
-        
-        
+            fuaFramePacket.writeBytes(NAL_PREFIX);
+            fuaFramePacket.writeByte(octet & 0xFF);
+        }
+
+
         if (null == fuaFramePacket) {
             return UNSUPPORTED;
         }
-        
+
 
         addFrameFlags(fuaFramePacket, profile);
         fuaFramePacket.writeBytes(in);
@@ -207,68 +207,68 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
             ret |= H264_END;
             flushFrame(out);
             fuaFramePacket = null;
-        } 
-        
+        }
+
         // 每个 H264帧都应该有最大的数据包
         else if (null != fuaFramePacket && fuaFramePacket.content().readableBytes() > MAX_FRAME_PACKET_SIZE) {
             flushImcompleteFrame(out);
             LOGGER.error("frame size {} is too large, flushed", fuaFramePacket.content().readableBytes());
         }
 
-    	return ret;
+        return ret;
     }
 
-	private void setKeyFrameExtra(MutableFramePacket framePacket) {
-		if (null == sps || null == pps) {
-			return;
-		}
-		
-		final boolean isEmptyFrame = !framePacket.content().isReadable();
-		final boolean isKeyFrame = framePacket.isKeyFrame();
-		if(isKeyFrame && isEmptyFrame) {
-		    AVCDecoderConfigurationRecord record = getExtra();
-		    
-		    boolean hasSPS_PPS = record.hasSPS_PPS();
-		    if (!sps.equals(record.getSps()) || !pps.equals(record.getPps())) {
-		        record.setSPS_PPS(Unpooled.wrappedBuffer(sps).copy().nioBuffer(), Unpooled.wrappedBuffer(pps).copy().nioBuffer());
-		        
-		        if (hasSPS_PPS) {
-		            framePacket.addFlag(Flags.DISCONTINUE);
-		            LOGGER.info("stream discontinued");
-		        }
-		    }
-		    
-			framePacket.writeBytes(NAL_PREFIX);
-			framePacket.writeBytes(sps.asReadOnlyBuffer());
-			framePacket.writeBytes(NAL_PREFIX);
-			framePacket.writeBytes(pps.asReadOnlyBuffer());
-			if (null != sei) {
-				framePacket.writeBytes(NAL_PREFIX);
-				framePacket.writeBytes(sei.asReadOnlyBuffer());
-			}
-		}
-	}
+    private void setKeyFrameExtra(MutableFramePacket framePacket) {
+        if (null == sps || null == pps) {
+            return;
+        }
+
+        final boolean isEmptyFrame = !framePacket.content().isReadable();
+        final boolean isKeyFrame = framePacket.isKeyFrame();
+        if (isKeyFrame && isEmptyFrame) {
+            AVCDecoderConfigurationRecord record = getExtra();
+
+            boolean hasSPS_PPS = record.hasSPS_PPS();
+            if (!sps.equals(record.getSps()) || !pps.equals(record.getPps())) {
+                record.setSPS_PPS(Unpooled.wrappedBuffer(sps).copy().nioBuffer(), Unpooled.wrappedBuffer(pps).copy().nioBuffer());
+
+                if (hasSPS_PPS) {
+                    framePacket.addFlag(Flags.DISCONTINUE);
+                    LOGGER.info("stream discontinued");
+                }
+            }
+
+            framePacket.writeBytes(NAL_PREFIX);
+            framePacket.writeBytes(sps.asReadOnlyBuffer());
+            framePacket.writeBytes(NAL_PREFIX);
+            framePacket.writeBytes(pps.asReadOnlyBuffer());
+            if (null != sei) {
+                framePacket.writeBytes(NAL_PREFIX);
+                framePacket.writeBytes(sei.asReadOnlyBuffer());
+            }
+        }
+    }
 
 
     private ByteBuffer copy(ByteBuf in, ByteBuffer out) {
-    	int readableBytes = in.readableBytes();
-    	LOGGER.trace("nal:{}, {} bytes", nal_unit_type, readableBytes);
-    	
-		if (null == out) {
-		    out = ByteBuffer.allocate(readableBytes);
-    	} else if (out.clear().remaining() != readableBytes){
-    	    out = ByteBuffer.allocate(readableBytes);
-    	    LOGGER.warn("{} discontinued, data size = {}", this, readableBytes);
-    	}
-		
-		// out.remaining() 的长度必须等于 in.readableBytes();
-		// 否则 in.readBytes(out) 会报错
-		assert out.remaining() == in.readableBytes();
-		
-    	in.readBytes(out);
-    	out.flip();
-    	
-    	return out;
+        int readableBytes = in.readableBytes();
+        LOGGER.trace("nal:{}, {} bytes", nal_unit_type, readableBytes);
+
+        if (null == out) {
+            out = ByteBuffer.allocate(readableBytes);
+        } else if (out.clear().remaining() != readableBytes) {
+            out = ByteBuffer.allocate(readableBytes);
+            LOGGER.warn("{} discontinued, data size = {}", this, readableBytes);
+        }
+
+        // out.remaining() 的长度必须等于 in.readableBytes();
+        // 否则 in.readBytes(out) 会报错
+        assert out.remaining() == in.readableBytes();
+
+        in.readBytes(out);
+        out.flip();
+
+        return out;
     }
 
 
@@ -290,10 +290,10 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
          * calculated JMF value.
          */
         long exceptSequenceNumber = 0xFFFF & (lastSequenceNumber + 1);
-        if(sequenceNumber < exceptSequenceNumber) {
-        	LOGGER.debug("except seqNumber is {}, but real is {}, last is {}", exceptSequenceNumber, sequenceNumber, lastSequenceNumber);
+        if (sequenceNumber < exceptSequenceNumber && LOGGER.isTraceEnabled()) {
+            LOGGER.trace("except seqNumber is {}, but real is {}, last is {}", exceptSequenceNumber, sequenceNumber, lastSequenceNumber);
         }
-        
+
         lastSequenceNumber = sequenceNumber;
 
         /*
@@ -301,7 +301,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
          */
         int profile = inBuffer.getFlags();
         ByteBuf payload = inBuffer.content();
-		byte octet = payload.getByte(payload.readerIndex());
+        byte octet = payload.getByte(payload.readerIndex());
 
         /*
          * NRI equal to the binary value 00 indicates that the content of the
@@ -323,24 +323,24 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
 
         // Single NAL Unit Packet
         if ((nal_unit_type >= 0) && (nal_unit_type <= 23)) {
-            
-        	ret = dePacketizeSingleNALUnitPacket(
-        		out,
-                payload,
-                profile,
-                nal_unit_type,
-                inBuffer);
-            
+
+            ret = dePacketizeSingleNALUnitPacket(
+                    out,
+                    payload,
+                    profile,
+                    nal_unit_type,
+                    inBuffer);
+
         } else if (nal_unit_type == 28) { // FU-A Fragmentation unit (FU)
             ret = dePacketizeFUA(out, payload, profile, inBuffer);
         } else if (nal_unit_type == 24) { // STAP-A (one packet, multiple nals)
-        	ret = dePacketizeAggregated(out, payload, profile, inBuffer);
+            ret = dePacketizeAggregated(out, payload, profile, inBuffer);
         } else {
-        	flushImcompleteFrame(out);
+            flushImcompleteFrame(out);
 
-        	LOGGER.warn("Dropping NAL unit of unsupported type {}, {} bytes", nal_unit_type, payload.readableBytes());
-        	payload.readSlice(payload.readableBytes()); // skip nals
-        	
+            LOGGER.warn("Dropping NAL unit of unsupported type {}, {} bytes", nal_unit_type, payload.readableBytes());
+            payload.readSlice(payload.readableBytes()); // skip nals
+
             this.nal_unit_type = nal_unit_type;
 
             ret = IMCOMPLETED;
@@ -351,64 +351,66 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
 
     /**
      * Extract a single (complete) NAL unit from RTP payload.
-     * @param out the <tt>Buffer</tt> which is to receive the extracted
-     * NAL unit
+     *
+     * @param out           the <tt>Buffer</tt> which is to receive the extracted
+     *                      NAL unit
      * @param nal_unit_type unit type of NAL
-     * @param in the payload of the RTP packet
-     * @param inOffset the offset in <tt>in</tt> at which the payload begins
-     * @param inLength the length of the payload in <tt>in</tt> beginning at
-     * <tt>inOffset</tt>
+     * @param in            the payload of the RTP packet
+     * @param inOffset      the offset in <tt>in</tt> at which the payload begins
+     * @param inLength      the length of the payload in <tt>in</tt> beginning at
+     *                      <tt>inOffset</tt>
      * @return the flags such as <tt>BUFFER_PROCESSED_OK</tt> and
      * <tt>OUTPUT_BUFFER_NOT_FILLED</tt> to be returned by
      * {@link #process(Buffer, Buffer)}
      */
     private int dePacketizeSingleNALUnitPacket(List<Object> out, ByteBuf rtp, int profile,
-            int nal_unit_type, RtpPacketI inBuffer) {
+                                               int nal_unit_type, RtpPacketI inBuffer) {
         int ret = H264_START | H264_END; // frame start & end
 
         this.nal_unit_type = nal_unit_type;
 
         switch (nal_unit_type) {
-        case kSei:
-            sei = copy(rtp, sei);
-            ret |= H264_SEI;
-            break;
-        case kSps:
-            sps = copy(rtp, sps);
-            ret |= H264_SPS;
-            break;
-        case kPps:
-            pps = copy(rtp, pps);
-            ret |= H264_PPS;
-            break;
-        default:
-            MutableFramePacket frame = newFramePacket();
-            addFrameFlags(frame, profile);
-            try {
+            case kSei:
+                sei = copy(rtp, sei);
+                ret |= H264_SEI;
+                break;
+            case kSps:
+                sps = copy(rtp, sps);
+                ret |= H264_SPS;
+                break;
+            case kPps:
+                pps = copy(rtp, pps);
+                ret |= H264_PPS;
+                break;
+            default:
+                MutableFramePacket frame = newFramePacket();
+                addFrameFlags(frame, profile);
+                try {
 
-                if (nal_unit_type == kIdr) {
-                    ret |= (H264_KEY);
-                    frame.addFlag(Flags.KEY_FRAME);
-                    setKeyFrameExtra(frame);
+                    if (nal_unit_type == kIdr) {
+                        ret |= (H264_KEY);
+                        frame.addFlag(Flags.KEY_FRAME);
+                        setKeyFrameExtra(frame);
+                    }
+                    frame.writeBytes(NAL_PREFIX);
+                    frame.writeBytes(rtp);
+                    out.add(frame.retain());
+                } finally {
+                    frame.release();
                 }
-                frame.writeBytes(NAL_PREFIX);
-                frame.writeBytes(rtp);
-                out.add(frame.retain());
-            } finally {
-                frame.release();
-            }
-            break;
+                break;
         }
 
         return ret;
     }
-    
+
     /**
      * 考虑到 2.2.119 之前 profile 为  0xbede ( 1011, 1110, 1101, 1110) 为既成事实，为了实现对老版本的兼容
-     *   我们确定代码为：
-     *   1、(profile & 0x8000) > 0  表示： 有 MD
-     *   2、(profile & 0x0001) > 0  表示： 支持 PIR
-     *   3、(profile & 0x0020) > 0  表示： 有 PIR 检测结果
+     * 我们确定代码为：
+     * 1、(profile & 0x8000) > 0  表示： 有 MD
+     * 2、(profile & 0x0001) > 0  表示： 支持 PIR
+     * 3、(profile & 0x0020) > 0  表示： 有 PIR 检测结果
+     *
      * @param frame
      * @param profile
      */
@@ -419,153 +421,146 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
             frame.addFlag((profile & 0x0001) > 0 ? Flags.HAS_PIR : 0);
 
             // 调试专用
-            if (profile != 0xbede && LOGGER.isDebugEnabled()) {
-                LOGGER.debug("profile= {} ", profile);
+            if (profile != 0xbede && LOGGER.isTraceEnabled()) {
+                LOGGER.trace("profile= {} ", profile);
             }
         }
-        
+
     }
+
     private int dePacketizeAggregated(List<Object> out, ByteBuf payload, int profile, RtpPacketI inBuffer) {
         int ret = H264_START | H264_END;
-    	MutableFramePacket frame = newFramePacket();
-    	try {
-    	    addFrameFlags(frame, profile);
+        MutableFramePacket frame = newFramePacket();
+        try {
+            addFrameFlags(frame, profile);
 
-    	    // skip nal type
-    		payload.readByte();
-    		
-			while(payload.readableBytes() > 2) {
-				int nalSize = payload.readUnsignedShort();
-				if (nalSize > payload.readableBytes() || nalSize < 1) {
-				    LOGGER.error("illegal nal size {} while only {} readable bytes", nalSize, payload.readableBytes());
-				    break;
-				}
-				ByteBuf nalUnit = payload.readSlice(nalSize);
-				nal_unit_type = nalUnit.getByte(nalUnit.readerIndex()) & 0x1F; 
-				LOGGER.debug("nal = {}, len = {}", nal_unit_type, nalUnit.readableBytes());
-				
-		        switch (nal_unit_type) {
-		        case kSei:
-					sei = copy(nalUnit, sei);
-					ret |= H264_SEI;
-		        	break;
-				case kSps:
-					sps = copy(nalUnit, sps);
-					ret |= H264_SPS;
-					break;
-				case kPps:
-					pps = copy(nalUnit, pps);
-					ret |= H264_PPS;
-					break;
-				case kIdr:
-                    ret |= H264_KEY;
-					frame.addFlag(Flags.KEY_FRAME);
-					setKeyFrameExtra(frame);
-				default:
-					frame.writeBytes(NAL_PREFIX);
-					frame.writeBytes(nalUnit);
-					break;
-				}
-			}
-			
-			if(frame.content().isReadable()) {
-				out.add(frame.retain());
-			}
-    	} finally {
-    		frame.release();
-    	}
-		return ret;
-	}
+            // skip nal type
+            payload.readByte();
 
-	@Override
+            while (payload.readableBytes() > 2) {
+                int nalSize = payload.readUnsignedShort();
+                if (nalSize > payload.readableBytes() || nalSize < 1) {
+                    LOGGER.error("illegal nal size {} while only {} readable bytes", nalSize, payload.readableBytes());
+                    break;
+                }
+                ByteBuf nalUnit = payload.readSlice(nalSize);
+                nal_unit_type = nalUnit.getByte(nalUnit.readerIndex()) & 0x1F;
+                LOGGER.debug("nal = {}, len = {}", nal_unit_type, nalUnit.readableBytes());
+
+                switch (nal_unit_type) {
+                    case kSei:
+                        sei = copy(nalUnit, sei);
+                        ret |= H264_SEI;
+                        break;
+                    case kSps:
+                        sps = copy(nalUnit, sps);
+                        ret |= H264_SPS;
+                        break;
+                    case kPps:
+                        pps = copy(nalUnit, pps);
+                        ret |= H264_PPS;
+                        break;
+                    case kIdr:
+                        ret |= H264_KEY;
+                        frame.addFlag(Flags.KEY_FRAME);
+                        setKeyFrameExtra(frame);
+                    default:
+                        frame.writeBytes(NAL_PREFIX);
+                        frame.writeBytes(nalUnit);
+                        break;
+                }
+            }
+
+            if (frame.content().isReadable()) {
+                out.add(frame.retain());
+            }
+        } finally {
+            frame.release();
+        }
+        return ret;
+    }
+
+    @Override
     public void release() {
-    	if (null != fuaFramePacket) {
-    		LOGGER.debug("release {} bytes", fuaFramePacket.content().readableBytes());
-    		ReferenceCountUtil.release(fuaFramePacket);
-    		fuaFramePacket = null;
-    	}
+        if (null != fuaFramePacket) {
+            LOGGER.debug("release {} bytes", fuaFramePacket.content().readableBytes());
+            ReferenceCountUtil.release(fuaFramePacket);
+            fuaFramePacket = null;
+        }
     }
-    
+
     private void flushImcompleteFrame(List<Object> out) {
-    	if (null != fuaFramePacket) {
-    		fuaFramePacket.addFlag(Flags.IMCOMPLETE_FRAME);
-    		flushFrame(out);
-    	}
+        if (null != fuaFramePacket) {
+            fuaFramePacket.addFlag(Flags.IMCOMPLETE_FRAME);
+            flushFrame(out);
+        }
     }
 
-	private void flushFrame(List<Object> out) {
-	    if (null == fuaFramePacket) {
-	        return;
-	    }
-	    
-		try {
-			// Should we request a key frame.
-	        switch (this.nal_unit_type)
-	        {
-	        case kIdr /* Coded slice of an IDR picture */:
+    private void flushFrame(List<Object> out) {
+        if (null == fuaFramePacket) {
+            return;
+        }
 
-	        /*
-	         * While it seems natural to not request a key frame in the presence of
-	         * 5, 7 and 8 often seem to be followed by 5 so do not request a key
-	         * frame if either 7 or 8 is present.
-	         */
-	        case kSps /* Sequence parameter set */:
-	        case kPps /* Picture parameter set */:
-	            requestKeyFrame = false;
-	            break;
-	        default:
-	            break;
-	        }
-	        
-	        // 需要等待关键帧
-	        if (requestKeyFrame && !fuaFramePacket.isKeyFrame()) {
-	        	return;
-	        }
-			
-			out.add(fuaFramePacket.retain());
-		} finally {
-		    fuaFramePacket.release();
-		    fuaFramePacket = null;
-		}
-	}
+        try {
+            // Should we request a key frame.
+            switch (this.nal_unit_type) {
+                case kIdr /* Coded slice of an IDR picture */:
+
+                    /*
+                     * While it seems natural to not request a key frame in the presence of
+                     * 5, 7 and 8 often seem to be followed by 5 so do not request a key
+                     * frame if either 7 or 8 is present.
+                     */
+                case kSps /* Sequence parameter set */:
+                case kPps /* Picture parameter set */:
+                    requestKeyFrame = false;
+                    break;
+                default:
+                    break;
+            }
+
+            // 需要等待关键帧
+            if (requestKeyFrame && !fuaFramePacket.isKeyFrame()) {
+                return;
+            }
+
+            out.add(fuaFramePacket.retain());
+        } finally {
+            fuaFramePacket.release();
+            fuaFramePacket = null;
+        }
+    }
 
 
-	/**
+    /**
      * Returns true if the buffer contains a H264 key frame at offset
      * <tt>offset</tt>.
      *
      * @param buff the byte buffer to check
-     * @param off the offset in the byte buffer where the actuall data starts
-     * @param len the length of the data in the byte buffer
+     * @param off  the offset in the byte buffer where the actuall data starts
+     * @param len  the length of the data in the byte buffer
      * @return true if the buffer contains a H264 key frame at offset
      * <tt>offset</tt>.
      */
-    public static boolean isKeyFrame(byte[] buff, int off, int len)
-    {
-      if (buff == null || buff.length < off + Math.max(len, 1))
-      {
-          return false;
-      }
+    public static boolean isKeyFrame(byte[] buff, int off, int len) {
+        if (buff == null || buff.length < off + Math.max(len, 1)) {
+            return false;
+        }
 
-      int nalType =  buff[off] & kTypeMask;
-      // Single NAL Unit Packet
-      if (nalType == kFuA)
-      {
-          // Fragmented NAL units (FU-A).
-          if (parseFuaNaluForKeyFrame(buff, off, len))
-          {
-              return true;
-          }
-      }
-      else
-      {
-          if (parseSingleNaluForKeyFrame(buff, off, len))
-          {
-              return true;
-          }
-      }
+        int nalType = buff[off] & kTypeMask;
+        // Single NAL Unit Packet
+        if (nalType == kFuA) {
+            // Fragmented NAL units (FU-A).
+            if (parseFuaNaluForKeyFrame(buff, off, len)) {
+                return true;
+            }
+        } else {
+            if (parseSingleNaluForKeyFrame(buff, off, len)) {
+                return true;
+            }
+        }
 
-      return false;
+        return false;
     }
 
     /**
@@ -573,26 +568,23 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
      * payload is keyframe or not
      */
     private static boolean parseFuaNaluForKeyFrame(byte[] buff, int off, int len) {
-      if (len < kFuAHeaderSize) {
-          return false;
-      }
-      return ((buff[off + 1] & kTypeMask) == kIdr);
+        if (len < kFuAHeaderSize) {
+            return false;
+        }
+        return ((buff[off + 1] & kTypeMask) == kIdr);
     }
 
     /**
      * Checks if a a fragment of a NAL unit from a specific FU-A RTP packet
      * payload is keyframe or not
      */
-    private static boolean parseSingleNaluForKeyFrame(byte[] buff, int off, int len)
-    {
+    private static boolean parseSingleNaluForKeyFrame(byte[] buff, int off, int len) {
         int naluStart = off + kNalHeaderSize;
         int naluLength = len - kNalHeaderSize;
         int nalType = buff[off] & kTypeMask;
-        if (nalType == kStapA)
-        {
+        if (nalType == kStapA) {
             // Skip the StapA header (StapA nal type + length).
-            if (len <= kStapAHeaderSize)
-            {
+            if (len <= kStapAHeaderSize) {
                 LOGGER.error("StapA header truncated.");
                 return false;
             }
@@ -607,21 +599,17 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
     }
 
     private static boolean verifyStapANaluLengths(byte[] data, int offset,
-        int lengthRemaining)
-    {
+                                                  int lengthRemaining) {
         int initialLength = lengthRemaining;
-        while (lengthRemaining > 0 && offset + 1 < initialLength && offset > 0)
-        {
+        while (lengthRemaining > 0 && offset + 1 < initialLength && offset > 0) {
             // Buffer doesn't contain room for additional nalu length.
-            if (lengthRemaining < kNalUSize)
-            {
+            if (lengthRemaining < kNalUSize) {
                 return false;
             }
-            int naluSize = data[offset] << 8 | data[offset+1];
+            int naluSize = data[offset] << 8 | data[offset + 1];
             offset += kNalUSize;
             lengthRemaining -= kNalUSize;
-            if (naluSize > lengthRemaining)
-            {
+            if (naluSize > lengthRemaining) {
                 return false;
             }
             offset += naluSize;
