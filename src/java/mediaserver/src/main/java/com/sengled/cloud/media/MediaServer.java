@@ -1,10 +1,5 @@
 package com.sengled.cloud.media;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.web.WebClientAutoConfiguration;
-import org.springframework.context.ConfigurableApplicationContext;
 import com.sengled.cloud.authication.AuthicationConfiguration;
 import com.sengled.cloud.devops.DevOpsConfiguration;
 import com.sengled.cloud.media.spring.MediaServerConfiguration;
@@ -20,11 +15,15 @@ import com.sengled.media.bootstrap.spring.HttpsConfiguration;
 import com.sengled.media.bootstrap.sqs.SQS;
 import com.sengled.media.resourcemanager.ResourceManagerConfiguration;
 import com.sengled.media.storage.StorageServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.web.WebClientAutoConfiguration;
 
 
 public class MediaServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MediaServer.class);
-    
+
     public static void main(String[] args) {
         final long startAt = System.currentTimeMillis();
 
@@ -50,11 +49,11 @@ public class MediaServer {
                 DevOpsConfiguration.class,
                 AuthicationConfiguration.class,
                 MediaServerConfiguration.class,
-//                StorageServer.class,
+                StorageServer.class,
                 AlgorithmConfiguration.class,
         }, args);
-        
-        
+
+
         LOGGER.info("MediaServer started, costed {} ms", (System.currentTimeMillis() - startAt));
     }
 }
