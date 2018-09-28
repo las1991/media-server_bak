@@ -23,8 +23,7 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
         READ_FIRST_BYTE,
         READ_RTP_CHANNEL,
         READ_RTP_LENGTH,
-        READ_RTP,
-        READ_RTCP
+        READ_RTP
     }
 
     private STATE state = STATE.READ_FIRST_BYTE;
@@ -62,6 +61,8 @@ public class RtpOverTcpDecoder extends ByteToMessageDecoder {
                     break;
                 }
                 length = in.readUnsignedShort();
+                state = STATE.READ_RTP;
+            case READ_RTP:
                 if (in.readableBytes() >= length) {
                     FramingRtpPacket packet = new FramingRtpPacket(channel, length, in.readSlice(length).retain());
                     if (null != packet) {
