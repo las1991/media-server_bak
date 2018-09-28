@@ -45,8 +45,8 @@ public class RtspServerConfig {
         return this;
     }
     
-    public RtspServerConfig withRtspProtocol() {
-        this.useRTSPProtocol = true;
+    public RtspServerConfig withRtspProtocol(boolean useRTSPProtocol) {
+        this.useRTSPProtocol = useRTSPProtocol;
         return this;
     }
     

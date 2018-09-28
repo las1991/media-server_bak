@@ -3,6 +3,7 @@ package com.sengled.cloud.media.spring;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -27,27 +28,29 @@ import com.sengled.media.server.rtsp.RtspServerContext;
 
 /**
  * 初始化一个 Media-Server 容器
- * 
+ *
  * @author chenxh
  */
 public class MediaServerContainer implements SmartLifecycle {
     private static final Logger LOGGER = LoggerFactory.getLogger(MediaServerContainer.class);
 
-    /** 一个 server context 可以关联好多个 server */
+    /**
+     * 一个 server context 可以关联好多个 server
+     */
     private final RtspServerContext serverContext;
 
     @Autowired
     private ClientHttpRequestFactory clientHttpRequestFactory;
-    
-    @Autowired(required=false)
+
+    @Autowired(required = false)
     private SQSTemplate sqsTemplate;
-    
-    @Autowired(required=false)
+
+    @Autowired(required = false)
     private KinesisProducer kinesisProducer;
-    
+
     @Value("${media.app.rootpath}")
     private String scriptRootPath;
-    
+
     @Autowired
     private MetricRegistry metricRegistry;
 
@@ -58,7 +61,7 @@ public class MediaServerContainer implements SmartLifecycle {
     private MediaAnnouncerProperties mediaAnnouncerProperties;
 
     private RtspServer server;
-    
+
     public MediaServerContainer(RtspServerContext serverContext) {
         this.serverContext = serverContext;
     }
@@ -66,20 +69,19 @@ public class MediaServerContainer implements SmartLifecycle {
     @Override
     public void start() {
         server = RtspServer.builder().withMetricRegistry(metricRegistry).build(serverContext);
-        
+
         // 加载本地脚本
         loadJavaScripts(server);
 
         // 上行
         listPort(mediaAnnouncerProperties.getTcp(), server);
-        // listPort(mediaAnnouncerProperties.getTalkback(), server);
         listPort(mediaAnnouncerProperties.getTls(), server);
-        
+
         // 下行
         listPort(mediaDescriberProperties.getApp(), server);
         listPort(mediaDescriberProperties.getAwsEcho(), server);
-        
-        
+
+
         // metrics-grsphics 记录任务数量
         metricRegistry.register(MetricRegistry.name(server.getName(), "streams"), new Gauge<Long>() {
             @Override
@@ -87,7 +89,7 @@ public class MediaServerContainer implements SmartLifecycle {
                 return (long) server.getServerContext().getMediaSourceNames().size();
             }
         });
-        
+
         LOGGER.info("{} server started", serverContext.getName());
     }
 
@@ -95,14 +97,14 @@ public class MediaServerContainer implements SmartLifecycle {
         if (null != config && config.getPort() > 0) {
             final int port = config.getPort();
             server.listen(RtspServerConfig.newInstance(config.isSsl())
-                                          .withMethods(config.getMethods().split(","))
-                                          .withPort(port)
-                                          .withHttpProtocol(config.isSupportedHttp())
-                                          .withRtspProtocol());
+                    .withMethods(config.getMethods().split(","))
+                    .withPort(port)
+                    .withHttpProtocol(config.isSupportedHttp())
+                    .withRtspProtocol(config.isSupportedRtsp()));
         }
     }
-    
-    
+
+
     /***
      * 开始加载脚本
      */
@@ -126,17 +128,17 @@ public class MediaServerContainer implements SmartLifecycle {
             }
         }
     }
-    
+
     @Override
     public int getPhase() {
         return 100;
     }
-    
+
     @Override
     public boolean isRunning() {
         return null != server;
     }
-    
+
     @Override
     public boolean isAutoStartup() {
         return true;
@@ -145,10 +147,10 @@ public class MediaServerContainer implements SmartLifecycle {
     @Override
     public void stop() {
         serverContext.clear();
-        
+
         server.shutdown();
     }
-    
+
     @Override
     public void stop(Runnable callback) {
         try {
@@ -157,5 +159,5 @@ public class MediaServerContainer implements SmartLifecycle {
             callback.run();
         }
     }
-    
+
 }

@@ -1,43 +1,51 @@
 package com.sengled.media.configuration;
 
 public class ProtocolConfig {
-    
+
     private int port;
     private boolean ssl;
     private boolean supportedHttp;
+    private boolean supportedRtsp;
     private String methods;
-    
-    
+
+
     public void setSupportedHttp(boolean supportedHttp) {
         this.supportedHttp = supportedHttp;
     }
-    
-    
+
+
     public boolean isSupportedHttp() {
         return supportedHttp;
     }
 
+    public void setSupportedRtsp(boolean supportedRtsp) {
+        this.supportedRtsp = supportedRtsp;
+    }
+
+    public boolean isSupportedRtsp() {
+        return supportedRtsp;
+    }
 
     public void setPort(int port) {
         this.port = port;
     }
-    
+
     public void setSsl(boolean ssl) {
         this.ssl = ssl;
     }
-    
+
     public int getPort() {
         return port;
     }
-    
+
     public boolean isSsl() {
         return ssl;
     }
-    
+
     public void setMethods(String methods) {
         this.methods = methods;
     }
-    
+
     public String getMethods() {
         return methods;
     }
