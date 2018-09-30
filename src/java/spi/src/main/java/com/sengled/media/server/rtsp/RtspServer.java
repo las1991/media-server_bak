@@ -13,7 +13,6 @@ import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpDecoder;
 import com.sengled.media.server.rtsp.rtp.codec.RtpOverTcpEncoder;
 import com.sengled.media.ssl.SSL;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -123,68 +122,6 @@ public class RtspServer {
         return serverContext.getName();
     }
 
-    private static class RtspServerChannelOutboundHandler extends ChannelOutboundHandlerAdapter {
-        private RtspServer server;
-
-        public RtspServerChannelOutboundHandler(RtspServer server) {
-            super();
-            this.server = server;
-        }
-
-        @Override
-        public void write(ChannelHandlerContext ctx,
-                          Object msg,
-                          ChannelPromise promise) {
-            final ByteBuf buf = (ByteBuf) msg;
-            final int writableBytes = buf.readableBytes();
-
-            ctx.write(msg, promise);
-
-            server.outboundIoMeter.mark(8 * writableBytes);
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            LOGGER.error("{}", cause.getMessage(), cause);
-        }
-    }
-
-    private static class RtspServerChannelInboundHandler extends ChannelInboundHandlerAdapter {
-        private RtspServer server;
-
-        public RtspServerChannelInboundHandler(RtspServer server) {
-            super();
-            this.server = server;
-        }
-
-        @Override
-        public void channelActive(ChannelHandlerContext ctx) {
-            ctx.fireChannelActive();
-
-            // 新来一个连接
-            server.channelsCounter.inc();
-        }
-
-        @Override
-        public void channelInactive(ChannelHandlerContext ctx) {
-            ctx.fireChannelInactive();
-
-            // 断开了一个连接
-            server.channelsCounter.dec();
-        }
-
-        @Override
-        public void channelRead(ChannelHandlerContext ctx,
-                                Object msg) {
-            final ByteBuf buf = (ByteBuf) msg;
-            final int readableBytes = buf.readableBytes();
-
-            ctx.fireChannelRead(msg);
-
-            // 统计输入流量
-            server.inboundIoMeter.mark(8 * (readableBytes - buf.readableBytes()));
-        }
-    }
 
     private static class RtspGlbalTrafficShapingHandler extends GlobalTrafficShapingHandler {
 
