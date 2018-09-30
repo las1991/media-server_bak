@@ -26,6 +26,8 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.codec.rtsp.RtspEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.handler.traffic.GlobalTrafficShapingHandler;
+import io.netty.handler.traffic.TrafficCounter;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -35,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author 陈修恒
@@ -62,6 +65,7 @@ public class RtspServer {
                     RTSP.SERVER_MAX_WORKER_THREADS * 2,
                     new DefaultThreadFactory("netty-executor", Thread.MAX_PRIORITY));
     private final Class<? extends ServerChannel> channelClass;
+    private final RtspGlbalTrafficShapingHandler trafficShapingHandler;
 
     /**
      * 监听的接口
@@ -92,6 +96,7 @@ public class RtspServer {
             channelClass = NioServerSocketChannel.class;
         }
 
+        this.trafficShapingHandler = new RtspGlbalTrafficShapingHandler(this, workerGroup, 5000);
 
         LOGGER.info("epoll {} available, use {} as socket channel", (Epoll.isAvailable() ? "is" : "is NOT"), channelClass);
     }
@@ -181,6 +186,27 @@ public class RtspServer {
         }
     }
 
+    private static class RtspGlbalTrafficShapingHandler extends GlobalTrafficShapingHandler {
+
+        Logger logger = LoggerFactory.getLogger(getClass());
+        private final RtspServer server;
+
+        public RtspGlbalTrafficShapingHandler(RtspServer server, ScheduledExecutorService executor, long checkInterval) {
+            super(executor, checkInterval);
+            this.server = server;
+        }
+
+        /**
+         * Override to compute average of bandwidth between all channels
+         */
+        @Override
+        protected void doAccounting(TrafficCounter trafficCounter) {
+            server.inboundIoMeter.mark((trafficCounter.lastReadBytes() + trafficCounter.currentReadBytes()) * 8);
+            server.outboundIoMeter.mark((trafficCounter.lastWrittenBytes() + trafficCounter.currentWrittenBytes()) * 8);
+            super.doAccounting(trafficCounter);
+        }
+    }
+
 
     public void shutdown() {
         // 停止监听端口
@@ -257,8 +283,9 @@ public class RtspServer {
                             }
 
                             // 流量统计
-                            pipeline.addLast(new RtspServerChannelInboundHandler(server));
-                            pipeline.addLast(new RtspServerChannelOutboundHandler(server));
+//                            pipeline.addLast(new RtspServerChannelInboundHandler(server));
+//                            pipeline.addLast(new RtspServerChannelOutboundHandler(server));
+                            pipeline.addLast(server.trafficShapingHandler);
 
                             // idle 事件
                             pipeline.addLast("IDEL_STATE_HANDLER", idleStateHandler);
