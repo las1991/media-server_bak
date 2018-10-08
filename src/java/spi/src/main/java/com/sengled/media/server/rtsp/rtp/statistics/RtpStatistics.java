@@ -569,6 +569,20 @@ public class RtpStatistics {
         }
     }
 
+    public void onRtpSent(int payloadLength, long time) {
+        this.rtpTxPackets++;
+        this.rtpTxOctets += payloadLength;
+        this.rtpSentOn = this.wallClock.getCurrentTime();
+        this.rtpTimestamp = time;
+        /*
+         * If the participant sends an RTP packet when we_sent is false, it adds
+         * itself to the sender table and sets we_sent to true.
+         */
+        if (!this.weSent) {
+            addSender(Long.valueOf(this.ssrc));
+        }
+    }
+
     public void onRtpReceive(InterleavedRtpPacket packet) {
         // Increment global statistics
         this.rtpRxPackets++;

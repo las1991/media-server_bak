@@ -1,16 +1,12 @@
 package com.sengled.media.server.rtsp.servlet;
 
-import org.apache.commons.io.IOUtils;
-import org.mobicents.media.server.impl.rtcp.RtcpPacket;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.sengled.media.MediaSink;
 import com.sengled.media.MediaSource;
 import com.sengled.media.StreamContext;
 import com.sengled.media.server.MutableFramePacket;
 import com.sengled.media.server.StreamingMediaSink;
 import com.sengled.media.server.rtsp.InterleavedFrame;
-import com.sengled.media.server.rtsp.Transport;
+import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
 import com.sengled.media.server.rtsp.rtp.RTP;
 import com.sengled.media.server.rtsp.rtp.RtpPacketI;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpPacketizer;
@@ -21,6 +17,9 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.internal.RecyclableArrayList;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 通过 RTSP over TCP
@@ -83,10 +82,10 @@ public class RtspOverTcpSink extends StreamingMediaSink implements MediaSink {
                 if (!isOK(rtpStream) || !isWritable()) {
                     continue;
                 }
-    
+
                 final int rtcpChannel = rtpStream.getRtcpChannel();
                 final ByteBuf rtcp = RTP.encode(rtpStream.bye());
-    
+
                 // 发送 RTCP BYE
                 writeAndFlush(new InterleavedFrame(rtcpChannel, rtcp)).addListener(new GenericFutureListener<Future<? super Void>>() {
                     @Override
@@ -95,7 +94,7 @@ public class RtspOverTcpSink extends StreamingMediaSink implements MediaSink {
                     }
                 });
             } finally {
-               IOUtils.closeQuietly(rtpStream);
+                IOUtils.closeQuietly(rtpStream);
             }
         }
     }

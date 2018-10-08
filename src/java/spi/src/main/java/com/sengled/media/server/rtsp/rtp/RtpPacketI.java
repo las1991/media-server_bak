@@ -1,7 +1,5 @@
 package com.sengled.media.server.rtsp.rtp;
 
-import org.mobicents.media.server.impl.rtp.statistics.InterleavedRtpPacket;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.util.ReferenceCounted;
@@ -11,8 +9,8 @@ import io.netty.util.ReferenceCounted;
  * 
  * @author chenxh
  */
-public interface RtpPacketI extends ReferenceCounted, InterleavedRtpPacket {
-	
+public interface RtpPacketI extends ReferenceCounted {
+
 	long getTime();
 	
 	int getSeqNumber();
@@ -24,13 +22,10 @@ public interface RtpPacketI extends ReferenceCounted, InterleavedRtpPacket {
 	 */
 	public int getFlags();
 	
-	@Override
 	int getPayloadLength();
-
 
     int getVersion();
     
-	@Override
 	long getSyncSource();
 	
 

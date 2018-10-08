@@ -1,46 +1,42 @@
 package com.sengled.media.server.rtsp.rtp.packetizer;
 
 
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.List;
-import javax.sdp.MediaDescription;
-import javax.sdp.SdpException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.math.RandomUtils;
-import org.mobicents.media.server.impl.rtcp.RtcpPacket;
-import org.mobicents.media.server.impl.rtcp.RtcpPacketFactory;
-import org.mobicents.media.server.impl.rtp.RtpClock;
-import org.mobicents.media.server.impl.rtp.statistics.RtpStatistics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.sengled.media.FramePacket;
 import com.sengled.media.MediaCodec;
 import com.sengled.media.StreamContext;
 import com.sengled.media.clock.Rational;
 import com.sengled.media.clock.SystemClock;
 import com.sengled.media.server.MediaCodecExtra;
-import com.sengled.media.server.rtsp.rtp.MutableRtpPacket;
-import com.sengled.media.server.rtsp.rtp.RTP;
-import com.sengled.media.server.rtsp.rtp.RtpPacketI;
-import com.sengled.media.server.rtsp.rtp.RtpStreamContext;
+import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
+import com.sengled.media.server.rtsp.rtcp.RtcpPacketFactory;
+import com.sengled.media.server.rtsp.rtp.*;
 import com.sengled.media.server.rtsp.rtp.packetizer.h264.AVCDecoderConfigurationRecord;
 import com.sengled.media.server.rtsp.rtp.packetizer.mpeg4.AudioSpecificConfig;
 import com.sengled.media.server.rtsp.rtp.packetizer.mpeg4.Mpeg4PacketConfig;
 import com.sengled.media.server.rtsp.rtp.packetizer.mpeg4.Mpeg4RtpPacketizer;
+import com.sengled.media.server.rtsp.rtp.statistics.RtpStatistics;
 import gov.nist.javax.sdp.fields.AttributeField;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.ReferenceCountUtil;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.math.RandomUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStreamContext<T> implements Closeable, AutoCloseable  {
+import javax.sdp.MediaDescription;
+import javax.sdp.SdpException;
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.List;
+
+public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStreamContext<T> implements Closeable, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RtpPacketizer.class);
-    
+
     private static final int SEND_RTCP_INTERVAL = 5000;
 
     private final RtpMockClock clock;
@@ -51,7 +47,7 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
     int rtpIndex;
     private long rtcpSentOn = -1;
     protected int maxPacketSize = (1460 - 12);
-    
+
     public RtpPacketizer(int streamIndex, Rational unit, StreamContext<T> src) {
         this(streamIndex, unit, src.getCodec(), src.getExtra());
 
@@ -68,7 +64,7 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
         this.clock = new RtpMockClock(timeUnit);
         this.setStatistics(new RtpStatistics(new RtpClock(clock), RandomUtils.nextLong(), CNAME));
     }
-    
+
     public boolean readMediaDescription(MediaDescription dst) throws SdpException {
         String rtpmap = null;
         String fmtp = null;
@@ -77,7 +73,7 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
         switch (codec) {
             case G711:
                 // a=rtpmap:8 PCMA/8000/1
-                int channels = getNumChannels() > 0 ? getNumChannels() : 1; 
+                int channels = getNumChannels() > 0 ? getNumChannels() : 1;
                 rtpmap = String.format("%d PCMA/%d/%d", codec.getRtpFormat(), getSampleRate(), channels);
                 break;
             case SPEEX:
@@ -87,13 +83,13 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
                 break;
             case AAC:
                 // a=rtpmap:97 MPEG4-GENERIC/44100/2
-                channels = getNumChannels() > 0 ? getNumChannels() : 2; 
+                channels = getNumChannels() > 0 ? getNumChannels() : 2;
                 rtpmap = String.format("%d MPEG4-GENERIC/%d/%d", codec.getRtpFormat(), getSampleRate(), channels);
-                
+
                 // a=fmtp:97 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=121056E500
-                AudioSpecificConfig config = (AudioSpecificConfig)getExtra();
+                AudioSpecificConfig config = (AudioSpecificConfig) getExtra();
                 if (null != config && null != config.getConfig()) {
-                    Mpeg4PacketConfig mpeg4PacketConfig = ((Mpeg4RtpPacketizer)this).getConfig();
+                    Mpeg4PacketConfig mpeg4PacketConfig = ((Mpeg4RtpPacketizer) this).getConfig();
                     String format = "%s profile-level-id=%d;mode=%s;sizelength=%d;indexlength=%d;indexdeltalength=%d; config=%s";
                     String hexConfig = Hex.encodeHexString(config.getConfig());
                     fmtp = String.format(format, codec.getRtpFormat(), mpeg4PacketConfig.getProfileLevelId(), mpeg4PacketConfig.getMode(), mpeg4PacketConfig.getSizeLength(), mpeg4PacketConfig.getIndexLength(), mpeg4PacketConfig.getIndexDeltaLength(), hexConfig);
@@ -102,17 +98,17 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
             case H264:
                 // a=rtpmap:96 H264/90000
                 rtpmap = String.format("%d H264/90000", codec.getRtpFormat());
-                
+
 
                 // 补齐 SPS 和 PPS， 否则 aws ECHO SHOW 不能播放视频
                 // a=fmtp:97 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3; config=121056E500
-                AVCDecoderConfigurationRecord record =  (AVCDecoderConfigurationRecord)getExtra();
+                AVCDecoderConfigurationRecord record = (AVCDecoderConfigurationRecord) getExtra();
                 ByteBuffer sps, pps, profile;
                 sps = null != record ? record.getSps() : null;
                 pps = null != record ? record.getPps() : null;
                 profile = null != record ? record.getProfile() : null;
                 if (null != sps && null != sps && null != profile) {
-                    
+
                     String format = "%s packetization-mode=1; sprop-parameter-sets=%s,%s; profile-level-id=%s";
                     String spsString = Base64.encode(Unpooled.wrappedBuffer(sps)).toString(Charset.defaultCharset());
                     String ppsString = Base64.encode(Unpooled.wrappedBuffer(pps)).toString(Charset.defaultCharset());
@@ -121,7 +117,7 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
                     fmtp = String.format(format, codec.getRtpFormat(), spsString, ppsString, profileString);
                 }
                 break;
-            default: 
+            default:
                 return false;
         }
 
@@ -131,19 +127,19 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
             f.setValue(rtpmap);
             dst.addAttribute(f);
         }
-        
+
         if (null != fmtp) {
             AttributeField f = new AttributeField();
             f.setName("fmtp");
             f.setValue(fmtp);
             dst.addAttribute(f);
         }
-        
-        return true;
-    } 
 
-    abstract protected void packet0(FramePacket frame, List<Object> out) ;
-    
+        return true;
+    }
+
+    abstract protected void packet0(FramePacket frame, List<Object> out);
+
     public void packet(FramePacket frame, List<Object> out) {
         try {
             rtpIndex = 0;
@@ -157,19 +153,19 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
 
             // 
             packet0(frame, out);
-            
+
             // 把第一个元素拿出来
             RtpStatistics statistics = getStatistics();
-            for (int i = readerIndex; i < out.size(); i ++) {
-                RtpPacketI packet = (RtpPacketI)out.get(i);
-                statistics.onRtpSent(packet);
+            for (int i = readerIndex; i < out.size(); i++) {
+                RtpPacketI packet = (RtpPacketI) out.get(i);
+                statistics.onRtpSent(packet.getPayloadLength(), packet.getTime());
             }
-            
+
             // 每隔 5s 发送 rtcp 包
             if (SystemClock.currentTimeMillis() - rtcpSentOn > SEND_RTCP_INTERVAL) {
                 final RtcpPacket sr = RtcpPacketFactory.buildReport(statistics);
                 out.add(0, sr);
-                
+
                 statistics.onRtcpSent(sr);
                 rtcpSentOn = SystemClock.currentTimeMillis();
             }
@@ -197,13 +193,13 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
 
         int seqNo = 0xFFFF & nextSeqNo();
         MutableRtpPacket rtp = RTP.wrap(version, marker, getPayloadType(), seqNo, rtpTime, ssrc, profile, data);
-        
-        rtpIndex ++; // 标记为下一个
+
+        rtpIndex++; // 标记为下一个
         return rtp;
     }
 
     private int nextSeqNo() {
-        return this.seqNo ++;
+        return this.seqNo++;
     }
 
     @Override
@@ -211,13 +207,14 @@ public abstract class RtpPacketizer<T extends MediaCodecExtra> extends RtpStream
         LOGGER.debug("{} closed", this);
         release();
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         release();
     }
-    
-    public void release() throws IOException {}
+
+    public void release() throws IOException {
+    }
 
 
     public long getRtpTime() {

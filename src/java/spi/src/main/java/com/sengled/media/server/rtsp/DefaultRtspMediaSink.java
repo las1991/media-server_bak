@@ -100,7 +100,7 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
         }
     }
 
-    private void onRtcpReceive(RtpDePacketizer<?> rtpStream, org.mobicents.media.server.impl.rtcp.RtcpPacket rtcpPacket) {
+    private void onRtcpReceive(RtpDePacketizer<?> rtpStream, RtcpPacket rtcpPacket) {
         rtpStream.dePacket(rtcpPacket);
     }
 
