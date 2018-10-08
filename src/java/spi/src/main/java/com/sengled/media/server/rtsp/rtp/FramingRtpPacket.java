@@ -13,7 +13,7 @@ public class FramingRtpPacket implements ByteBufHolder, RtpChannel {
     private final int channel;
     private final int length;
 
-    private ByteBuf content;
+    private final ByteBuf content;
 
     public FramingRtpPacket(int channel, int length, ByteBuf content) {
         this.channel = channel;
@@ -30,14 +30,6 @@ public class FramingRtpPacket implements ByteBufHolder, RtpChannel {
     }
 
     @Override
-    public String toString() {
-        return "FramingRtpPacket{" +
-                "channel=" + channel +
-                ", length=" + length +
-                '}';
-    }
-
-    @Override
     public ByteBuf content() {
         return content;
     }
@@ -49,7 +41,8 @@ public class FramingRtpPacket implements ByteBufHolder, RtpChannel {
 
     @Override
     public FramingRtpPacket duplicate() {
-        return new FramingRtpPacket(this.channel, this.length, content.duplicate());
+        content.duplicate();
+        return this;
     }
 
     @Override
@@ -59,12 +52,14 @@ public class FramingRtpPacket implements ByteBufHolder, RtpChannel {
 
     @Override
     public FramingRtpPacket retain() {
-        return new FramingRtpPacket(this.channel, this.length, content.retain());
+        content.retain();
+        return this;
     }
 
     @Override
     public FramingRtpPacket retain(int increment) {
-        return new FramingRtpPacket(this.channel, this.length, content.retain(increment));
+        content.retain(increment);
+        return this;
     }
 
     @Override
@@ -75,5 +70,13 @@ public class FramingRtpPacket implements ByteBufHolder, RtpChannel {
     @Override
     public boolean release(int decrement) {
         return content.release(decrement);
+    }
+
+    @Override
+    public String toString() {
+        return "FramingRtpPacket{" +
+                "channel=" + channel +
+                ", length=" + length +
+                '}';
     }
 }
