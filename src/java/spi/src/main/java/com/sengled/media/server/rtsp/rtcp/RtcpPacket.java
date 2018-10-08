@@ -126,6 +126,13 @@ public class RtcpPacket {
         return this.senderReport != null;
     }
 
+    public RtcpPacketType getPacketType() {
+        if(this.bye == null) {
+            return RtcpPacketType.RTCP_REPORT;
+        }
+        return RtcpPacketType.RTCP_BYE;
+    }
+
     public RtcpReport getReport() {
         if (isSender()) {
             return this.senderReport;
