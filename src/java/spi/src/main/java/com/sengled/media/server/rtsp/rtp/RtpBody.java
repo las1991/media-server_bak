@@ -1,5 +1,6 @@
 package com.sengled.media.server.rtsp.rtp;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 
 /**
@@ -8,5 +9,5 @@ import io.netty.buffer.ByteBufHolder;
  */
 public interface RtpBody extends ByteBufHolder {
 
-    RtpPayload payload();
+    ByteBuf payload();
 }

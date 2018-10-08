@@ -1,6 +1,9 @@
 package com.sengled.media.server.rtsp.rtp.codec;
 
-import com.sengled.media.server.rtsp.rtp.*;
+import com.sengled.media.server.rtsp.rtp.DefaultInterleavedRtpPacket;
+import com.sengled.media.server.rtsp.rtp.FixedRtpHeader;
+import com.sengled.media.server.rtsp.rtp.FramingRtpPacket;
+import com.sengled.media.server.rtsp.rtp.RtpHeader;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -86,7 +89,7 @@ public class InterleavedRtpDecoder extends MessageToMessageDecoder<FramingRtpPac
 
             RtpHeader header = new FixedRtpHeader(version, padding, extension, cc, marker, payloadType, seqNo, time, ssrc, csrc, profile, extensionLength, headerExtension);
 
-            RtpPayload payload = new RtpPayload(data.readSlice(data.readableBytes()).retain());
+            ByteBuf payload = data.readSlice(data.readableBytes()).retain();
 
             out.add(new DefaultInterleavedRtpPacket(msg.getChannel(), header, payload));
         } else {

@@ -1,6 +1,6 @@
 package com.sengled.media.server.rtsp.rtp;
 
-import io.netty.buffer.DefaultByteBufHolder;
+import io.netty.buffer.ByteBuf;
 
 import java.util.List;
 
@@ -28,20 +28,22 @@ import java.util.List;
  * @author las
  * @date 18-9-20
  */
-public class RtpPacket extends DefaultByteBufHolder implements RtpHeader, RtpBody {
+public class RtpPacket implements RtpHeader, RtpBody {
 
     private final RtpHeader header;
-    private final RtpPayload payload;
+    private ByteBuf payload;
 
-    public RtpPacket(RtpHeader header, RtpPayload payload) {
-        super(payload.content());
+    public RtpPacket(RtpHeader header, ByteBuf content) {
         this.header = header;
-        this.payload = payload;
+        this.payload = content;
     }
 
+    public RtpHeader rtpHeader() {
+        return header;
+    }
 
     @Override
-    public RtpPayload payload() {
+    public ByteBuf payload() {
         return payload;
     }
 
@@ -108,6 +110,49 @@ public class RtpPacket extends DefaultByteBufHolder implements RtpHeader, RtpBod
     @Override
     public byte[] extensionHeader() {
         return header.extensionHeader();
+    }
+
+    @Override
+    public ByteBuf content() {
+        return payload;
+    }
+
+    @Override
+    public RtpPacket copy() {
+        return new RtpPacket(header, payload.copy());
+    }
+
+    @Override
+    public RtpPacket duplicate() {
+        payload.duplicate();
+        return this;
+    }
+
+    @Override
+    public int refCnt() {
+        return payload.refCnt();
+    }
+
+    @Override
+    public RtpPacket retain() {
+        payload.retain();
+        return this;
+    }
+
+    @Override
+    public RtpPacket retain(int increment) {
+        payload.retain(increment);
+        return this;
+    }
+
+    @Override
+    public boolean release() {
+        return payload.release();
+    }
+
+    @Override
+    public boolean release(int decrement) {
+        return payload.release(decrement);
     }
 
     @Override

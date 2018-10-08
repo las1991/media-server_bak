@@ -9,22 +9,22 @@ import java.util.List;
  */
 public class FixedRtpHeader implements RtpHeader {
 
-    private int version;
-    private boolean padding;
-    private boolean extension;
-    private int cc;
-    private boolean marker;
+    private final int version;
+    private final boolean padding;
+    private final boolean extension;
+    private final int cc;
+    private final boolean marker;
 
-    private int payloadType;
-    private int seqNumber;
+    private final int payloadType;
+    private final int seqNumber;
 
-    private long time;
-    private long syncSource;
-    private List<Long> cSources;
+    private final long time;
+    private final long syncSource;
+    private final List<Long> cSources;
 
-    private int profile;
-    private int headerExtensionLength;
-    private byte[] headerExtension;
+    private final int profile;
+    private final int headerExtensionLength;
+    private final byte[] headerExtension;
 
     public FixedRtpHeader(int version, boolean padding, boolean extension, int cc, boolean marker, int payloadType, int seqNumber, long time, long syncSource, List<Long> cSources, int profile, int headerExtensionLength, byte[] headerExtension) {
         this.version = version;

@@ -75,7 +75,7 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
 
 
     private void onRtpReceive(RtpDePacketizer<?> dePacketizer, InterleavedRtpPacket rtpPacket) {
-        MutableRtpPacket rtp = new MutableRtpPacket(rtpPacket.payload().content());
+        MutableRtpPacket rtp = new MutableRtpPacket(rtpPacket.payload());
         rtp.setFlags(rtpPacket.profile());
         rtp.setMarker(rtpPacket.marker());
         rtp.setPayloadType(rtpPacket.payloadType());
