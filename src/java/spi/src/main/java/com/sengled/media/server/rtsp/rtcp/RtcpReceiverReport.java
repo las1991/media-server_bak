@@ -36,31 +36,28 @@ public class RtcpReceiverReport extends RtcpReport {
     }
 
     @Override
-    protected int encode(byte[] rawData, int offSet) {
-        int startPosition = offSet;
+    protected void encode(ByteBuf byteBuf) {
+        int startPosition = byteBuf.writerIndex();
 
-        offSet = super.encode(rawData, offSet);
+        super.encode(byteBuf);
 
-        rawData[offSet++] = ((byte) ((this.ssrc & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x000000FF)));
+        int lengthIndex = byteBuf.writerIndex() - 2;
+
+        byteBuf.writeInt((int) this.ssrc);
 
         for (RtcpReportBlock report : this.reportBlocks) {
             if (report != null) {
-                offSet = report.encode(rawData, offSet);
+                report.encode(byteBuf);
             } else {
                 break;
             }
         }
 
         /* Reduce 4 octets of header and length is in terms 32bits word */
-        this.length = (offSet - startPosition - 4) / 4;
+        this.length = (byteBuf.writerIndex() - startPosition - 4) / 4;
 
-        rawData[startPosition + 2] = ((byte) ((this.length & 0xFF00) >> 8));
-        rawData[startPosition + 3] = ((byte) (this.length & 0x00FF));
-
-        return offSet;
+        byteBuf.setShort(lengthIndex, this.length);
+        
     }
 
     @Override

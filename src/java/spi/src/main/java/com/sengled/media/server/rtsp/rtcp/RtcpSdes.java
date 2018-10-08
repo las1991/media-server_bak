@@ -36,29 +36,29 @@ public class RtcpSdes extends RtcpHeader {
             rtcpSdesChunk.decode(byteBuf);
             this.sdesChunks.add(rtcpSdesChunk);
         }
-        
+
     }
 
     @Override
-    protected int encode(byte[] rawData, int offSet) {
-        int startPosition = offSet;
+    protected void encode(ByteBuf byteBuf) {
+        int startPosition = byteBuf.writerIndex();
 
-        offSet = super.encode(rawData, offSet);
+        super.encode(byteBuf);
+        int lengthIndex = byteBuf.writerIndex() - 2;
+
         for (RtcpSdesChunk rtcpSdesChunk : sdesChunks) {
             if (rtcpSdesChunk != null) {
-                offSet = rtcpSdesChunk.encode(rawData, offSet);
+                rtcpSdesChunk.encode(byteBuf);
             } else {
                 break;
             }
         }
 
         /* Reduce 4 octest of header and length is in terms 32bits word */
-        this.length = (offSet - startPosition - 4) / 4;
+        this.length = (byteBuf.writerIndex() - startPosition - 4) / 4;
 
-        rawData[startPosition + 2] = ((byte) ((this.length & 0xFF00) >> 8));
-        rawData[startPosition + 3] = ((byte) (this.length & 0x00FF));
+        byteBuf.setShort(lengthIndex, this.length);
 
-        return offSet;
     }
 
     public void addRtcpSdesChunk(RtcpSdesChunk rtcpSdesChunk) {

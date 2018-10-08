@@ -102,42 +102,22 @@ public class RtcpReportBlock {
 
     }
 
-    protected int encode(byte[] rawData, int offSet) {
 
-        rawData[offSet++] = ((byte) ((this.ssrc & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x000000FF)));
+    protected void encode(ByteBuf byteBuf) {
 
-        rawData[offSet++] = ((byte) ((this.fraction & 0x000000FF)));
+        byteBuf.writeInt((int) this.ssrc);
 
-        rawData[offSet++] = ((byte) ((this.lost & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.lost & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.lost & 0x000000FF)));
+        byteBuf.writeByte(this.fraction);
 
-        //rawData[offSet++] = ((byte) ((this.lastSeq & 0xFF000000) >> 24));
-        //rawData[offSet++] = ((byte) ((this.lastSeq & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.SeqNumCycle & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.SeqNumCycle & 0x000000FF)));
+        byteBuf.writeMedium(this.lost);
 
-        rawData[offSet++] = ((byte) ((this.lastSeq & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.lastSeq & 0x000000FF)));
+        byteBuf.writeShort(this.SeqNumCycle);
+        byteBuf.writeShort((int) this.lastSeq);
 
-        rawData[offSet++] = ((byte) ((this.jitter & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.jitter & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.jitter & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.jitter & 0x000000FF)));
+        byteBuf.writeInt(this.jitter);
 
-        rawData[offSet++] = ((byte) ((this.lsr & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.lsr & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.lsr & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.lsr & 0x000000FF)));
+        byteBuf.writeInt((int) this.lsr);
 
-        rawData[offSet++] = ((byte) ((this.dlsr & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.dlsr & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.dlsr & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.dlsr & 0x000000FF)));
-
-        return offSet;
+        byteBuf.writeInt((int) this.dlsr);
     }
 }

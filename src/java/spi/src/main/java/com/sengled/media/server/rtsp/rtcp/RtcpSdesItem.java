@@ -54,16 +54,16 @@ public class RtcpSdesItem {
         byte[] chunkData = new byte[length];
         byteBuf.readBytes(chunkData);
         this.text = new String(chunkData);
-        
+
     }
 
-    protected int encode(byte[] rawData, int offSet) {
+    protected void encode(ByteBuf byteBuf) {
         byte[] textData = this.text.getBytes();
-        this.length = (short) textData.length;
-        rawData[offSet++] = ((byte) ((this.type & 0x000000FF)));
-        rawData[offSet++] = ((byte) ((this.length & 0x000000FF)));
-        System.arraycopy(textData, 0, rawData, offSet, this.length);
-        return (offSet + this.length);
+
+        byteBuf.writeByte(this.type);
+        byteBuf.writeByte(this.length);
+
+        byteBuf.writeBytes(textData, 0, textData.length);
     }
 
     public int getType() {

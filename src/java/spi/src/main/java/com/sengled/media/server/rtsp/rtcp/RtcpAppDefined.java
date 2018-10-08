@@ -42,42 +42,29 @@ public class RtcpAppDefined extends RtcpHeader {
 
     }
 
-    /**
-     * TODO
-     *
-     * @param rawData
-     * @param offSet
-     * @return
-     */
+
     @Override
-    protected int encode(byte[] rawData, int offSet) {
+    protected void encode(ByteBuf byteBuf) {
 
-        int startPosition = offSet;
+        int startPosition = byteBuf.writerIndex();
 
-        offSet = super.encode(rawData, offSet);
+        super.encode(byteBuf);
 
-        rawData[offSet++] = ((byte) ((this.ssrc & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x000000FF)));
+        int lengthIndex = byteBuf.writerIndex() - 2;
+
+        byteBuf.writeInt((int) this.ssrc);
 
         byte[] nameBytes = this.name.getBytes();
 
-        for (int i = 0; i < 4; i++) {
-            rawData[offSet++] = nameBytes[i];
-        }
+        byteBuf.writeBytes(nameBytes, 0, 4);
 
-        System.arraycopy(data, 0, rawData, offSet, data.length);
-
-        offSet += data.length;
+        byteBuf.writeBytes(data, 0, data.length);
 
         /* Reduce 4 octets of header and length is in terms 32bits word */
-        this.length = (offSet - startPosition - 4) / 4;
+        this.length = (byteBuf.writerIndex() - startPosition - 4) / 4;
 
-        rawData[startPosition + 2] = ((byte) ((this.length & 0xFF00) >> 8));
-        rawData[startPosition + 3] = ((byte) (this.length & 0x00FF));
+        byteBuf.setShort(lengthIndex, this.length);
 
-        return offSet;
     }
 
     public byte[] getData() {

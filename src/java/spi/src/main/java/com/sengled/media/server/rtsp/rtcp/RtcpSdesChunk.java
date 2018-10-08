@@ -74,35 +74,29 @@ public class RtcpSdesChunk {
         return itemCount;
     }
 
-    protected int encode(byte[] rawData, int offSet) {
+    protected void encode(ByteBuf byteBuf) {
 
-        int temp = offSet;
+        int temp = byteBuf.writerIndex();
 
-        rawData[offSet++] = ((byte) ((this.ssrc & 0xFF000000) >> 24));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x00FF0000) >> 16));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x0000FF00) >> 8));
-        rawData[offSet++] = ((byte) ((this.ssrc & 0x000000FF)));
+        byteBuf.writeInt((int) this.ssrc);
 
         for (RtcpSdesItem rtcpSdesItem : rtcpSdesItems) {
             if (rtcpSdesItem != null) {
-                offSet = rtcpSdesItem.encode(rawData, offSet);
+                rtcpSdesItem.encode(byteBuf);
             } else {
                 break;
             }
         }
 
         // This is End
-        rawData[offSet++] = 0x00;
+        byteBuf.writeZero(1);
 
-        int remainder = (offSet - temp) % 4;
+        int remainder = (byteBuf.writerIndex() - temp) % 4;
         if (remainder != 0) {
             int pad = 4 - remainder;
-            for (int i = 0; i < pad; i++) {
-                rawData[offSet++] = 0x00;
-            }
+            byteBuf.writeZero(pad);
         }
 
-        return offSet;
     }
 
     @Override

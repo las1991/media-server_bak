@@ -97,30 +97,29 @@ public class RtcpPacket {
 
     }
 
-    public int encode(byte[] rawData, int offSet) {
-        int initalOffSet = offSet;
+    public void encode(ByteBuf byteBuf) {
+        int initalOffSet = byteBuf.writerIndex();
         if (this.senderReport != null) {
             packetCount++;
-            offSet = this.senderReport.encode(rawData, offSet);
+            this.senderReport.encode(byteBuf);
         }
         if (this.receiverReport != null) {
             packetCount++;
-            offSet = this.receiverReport.encode(rawData, offSet);
+            this.receiverReport.encode(byteBuf);
         }
         if (this.sdes != null) {
             packetCount++;
-            offSet = this.sdes.encode(rawData, offSet);
+            this.sdes.encode(byteBuf);
         }
         if (this.appDefined != null) {
             packetCount++;
-            offSet = this.appDefined.encode(rawData, offSet);
+            this.appDefined.encode(byteBuf);
         }
         if (this.bye != null) {
             packetCount++;
-            offSet = this.bye.encode(rawData, offSet);
+            this.bye.encode(byteBuf);
         }
-        this.size = offSet - initalOffSet;
-        return offSet;
+        this.size = byteBuf.writerIndex() - initalOffSet;
     }
 
     public boolean isSender() {

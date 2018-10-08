@@ -77,29 +77,21 @@ public class RtcpHeader {
     }
 
 
-    /**
-     * TODO
-     *
-     * @param rawData
-     * @param offSet
-     * @return
-     */
-    protected int encode(byte[] rawData, int offSet) {
-        rawData[offSet] = (byte) (this.version << 6);
+    protected void encode(ByteBuf byteBuf) {
+        byte b = (byte) (this.version << 6);
         if (this.padding) {
-            rawData[offSet] = (byte) (rawData[offSet] | 0x20);
+            b |= 0x20;
         }
 
-        rawData[offSet] = (byte) (rawData[offSet] | (this.count & 0x1F));
+        b |= (byte) (this.count & 0x1F);
 
-        offSet++;
+        byteBuf.writeByte(b);
 
-        rawData[offSet++] = (byte) (this.packetType & 0x000000FF);
+        byteBuf.writeByte(this.packetType);
 
         // Setting length is onus of concrete class. But we increment the offSet
-        offSet += 2;
-
-        return offSet;
+        byteBuf.writeZero(2);
+        
     }
 
     public int getVersion() {

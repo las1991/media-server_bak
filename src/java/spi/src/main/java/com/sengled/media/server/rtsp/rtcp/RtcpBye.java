@@ -32,28 +32,24 @@ public class RtcpBye extends RtcpHeader {
     }
 
     @Override
-    protected int encode(byte[] rawData, int offSet) {
+    protected void encode(ByteBuf byteBuf) {
 
-        int startPosition = offSet;
+        int startPosition = byteBuf.writerIndex();
 
-        offSet = super.encode(rawData, offSet);
+        super.encode(byteBuf);
+
+        int lengthIndex = byteBuf.writerIndex() - 2;
 
         for (int i = 0; i < this.count; i++) {
             long ssrc = ssrcs[i];
-
-            rawData[offSet++] = ((byte) ((ssrc & 0xFF000000) >> 24));
-            rawData[offSet++] = ((byte) ((ssrc & 0x00FF0000) >> 16));
-            rawData[offSet++] = ((byte) ((ssrc & 0x0000FF00) >> 8));
-            rawData[offSet++] = ((byte) ((ssrc & 0x000000FF)));
+            byteBuf.writeInt((int) ssrc);
         }
 
         /* Reduce 4 octest of header and length is in terms 32bits word */
-        this.length = (offSet - startPosition - 4) / 4;
+        this.length = (byteBuf.writerIndex() - startPosition - 4) / 4;
 
-        rawData[startPosition + 2] = ((byte) ((this.length & 0xFF00) >> 8));
-        rawData[startPosition + 3] = ((byte) (this.length & 0x00FF));
-
-        return offSet;
+        byteBuf.setShort(lengthIndex, this.length);
+        
     }
 
     public void addSsrc(long ssrc) {

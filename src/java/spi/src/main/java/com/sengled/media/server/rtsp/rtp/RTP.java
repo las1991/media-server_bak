@@ -12,12 +12,21 @@ import io.netty.util.ReferenceCountUtil;
  */
 public final class RTP {
     private static NettySupport Netty = new NettySupport();
-    
+
+    /**
+     * The size of the fixed part of the RTP header as defined by RFC 3550.
+     */
     public static final int FIXED_HEADER_SIZE = 12;
+
     /**
      * The size of the extension header as defined by RFC 3550.
      */
-    public static final int EXT_HEADER_SIZE = 4;  
+    public static final int EXT_HEADER_SIZE = 4;
+
+    /**
+     * Current supported RTP version
+     */
+    public static final int VERSION = 2;
     
     private RTP() {}
     
