@@ -1,15 +1,12 @@
 package com.sengled.media.server.rtsp.rtp.packetizer.h264;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import org.jcodec.codecs.h264.H264Utils;
-import org.mobicents.media.server.spi.memory.Frame;
-import org.mobicents.media.server.spi.memory.Memory;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufProcessor;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.util.ReferenceCountUtil;
+
+import java.nio.ByteBuffer;
+import java.util.List;
 
 public class H264 {
     private static final int _2M = 2 * 1024 * 1024;
@@ -17,41 +14,41 @@ public class H264 {
     private H264() {
     }
 
-    public static void splitFast(ByteBuf nals, List<Object> out) {
-        ByteBufAllocator alloc = nals.alloc();
-        Frame frame = Memory.allocate(_2M);
-        try {
-            final int readableBytes = nals.readableBytes();
-            nals.readBytes(frame.getData(), 0, readableBytes);
-            ByteBuffer bytes = ByteBuffer.wrap(frame.getData(), 0, readableBytes);
-
-            H264Utils.skipToNALUnit(bytes);
-            int mark = bytes.position();
-            while (bytes.hasRemaining()) {
-                H264Utils.skipToNALUnit(bytes);
-
-                int length = bytes.position() - mark;
-                ByteBuf nal = alloc.buffer(length);
-                nal.writeBytes(frame.getData(), mark, length);
-
-                if (bytes.hasRemaining()) {
-                    if (nal.readableBytes() >= 4 && nal.getInt(length - 4) == 1) {
-                        nal.writerIndex(nal.writerIndex() - 4); // 实际 nal split 为 "0x00 0x00 0x00 0x01"
-                    } else {
-                        nal.writerIndex(nal.writerIndex() - 3); // 实际 nal split 为 "0x00 0x00 0x01"
-                    }
-                }
-
-
-                mark = bytes.position();
-                out.add(nal);
-            }
-
-        } finally {
-            frame.recycle();
-            nals.release();
-        }
-    }
+//    public static void splitFast(ByteBuf nals, List<Object> out) {
+//        ByteBufAllocator alloc = nals.alloc();
+//        Frame frame = Memory.allocate(_2M);
+//        try {
+//            final int readableBytes = nals.readableBytes();
+//            nals.readBytes(frame.getData(), 0, readableBytes);
+//            ByteBuffer bytes = ByteBuffer.wrap(frame.getData(), 0, readableBytes);
+//
+//            H264Utils.skipToNALUnit(bytes);
+//            int mark = bytes.position();
+//            while (bytes.hasRemaining()) {
+//                H264Utils.skipToNALUnit(bytes);
+//
+//                int length = bytes.position() - mark;
+//                ByteBuf nal = alloc.buffer(length);
+//                nal.writeBytes(frame.getData(), mark, length);
+//
+//                if (bytes.hasRemaining()) {
+//                    if (nal.readableBytes() >= 4 && nal.getInt(length - 4) == 1) {
+//                        nal.writerIndex(nal.writerIndex() - 4); // 实际 nal split 为 "0x00 0x00 0x00 0x01"
+//                    } else {
+//                        nal.writerIndex(nal.writerIndex() - 3); // 实际 nal split 为 "0x00 0x00 0x01"
+//                    }
+//                }
+//
+//
+//                mark = bytes.position();
+//                out.add(nal);
+//            }
+//
+//        } finally {
+//            frame.recycle();
+//            nals.release();
+//        }
+//    }
 
     /**
      * 把以 0001 分割的 NAL 数据分割开来
@@ -106,16 +103,20 @@ public class H264 {
             return false;
         }
 
-        int val = 0xffffffff;
-        while (buf.isReadable()) {
-            val <<= 8;
-            val |= (buf.readByte() & 0xff);
-            if ((val & 0xffffff) == 1) {
-                break;
-            }
-        }
+        int tmp = buf.forEachByte(new ByteBufProcessor() {
+            int val = 0xffffffff;
 
-        return true;
+            @Override
+            public boolean process(byte value) throws Exception {
+                val <<= 8;
+                val |= value;
+                return (val & 0xffffff) == 1;
+            }
+        });
+
+        buf.readerIndex(tmp);
+
+        return tmp > 0;
     }
 
 
