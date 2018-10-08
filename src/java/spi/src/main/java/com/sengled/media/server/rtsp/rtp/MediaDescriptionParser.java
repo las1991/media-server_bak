@@ -15,20 +15,20 @@ import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 public interface MediaDescriptionParser {
 	
 	/**
-	 * @param media TODO
+	 * @param media
 	 * @param rtpmap
 	 * @return true 表示能够处理这里视频流
 	 */
-	public boolean accept(Media media, RtpMapAttribute rtpmap);
+	boolean accept(Media media, RtpMapAttribute rtpmap);
 	
 	/**
 	 * 构造出拆包器
-	 * @param rtpmap TODO
+	 * @param rtpmap
 	 * @param md
 	 * @param streamIndex
 	 * 
 	 * @return
 	 * @throws SdpParseException
 	 */
-	public RtpDePacketizer<? extends MediaCodecExtra> parse(RtpMapAttribute rtpmap, MediaDescription md, int streamIndex) throws SdpParseException;
+	RtpDePacketizer<? extends MediaCodecExtra> parse(RtpMapAttribute rtpmap, MediaDescription md, int streamIndex) throws SdpParseException;
 }
