@@ -114,7 +114,7 @@ public class RtcpSenderReport extends RtcpReport {
         this.length = (byteBuf.writerIndex() - startPosition - 4) / 4;
 
         byteBuf.setShort(lengthIndex, this.length);
-        
+
     }
 
     public long getNtpSec() {
@@ -144,5 +144,24 @@ public class RtcpSenderReport extends RtcpReport {
     @Override
     public boolean isSender() {
         return IS_SENDER;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("SENDER REPORT:\n");
+        builder.append("version=").append(this.version).append(", ");
+        builder.append("padding=").append(this.padding).append(", ");
+        builder.append("packet type=").append(this.packetType).append(", ");
+        builder.append("length=").append(this.length).append(", ");
+        builder.append("ssrc=").append(this.ssrc).append(", ");
+        builder.append("ntp seconds=").append(this.ntpSec).append(", ");
+        builder.append("ntp fraction=").append(this.ntpFrac).append(", ");
+        builder.append("rtp timestamp=").append(this.rtpTs).append(", ");
+        builder.append("packets sent=").append(this.psent).append(", ");
+        builder.append("octets sent=").append(this.osent).append("\n");
+        for (RtcpReportBlock rr : this.reportBlocks) {
+            builder.append("\n").append(rr.toString());
+        }
+        return builder.toString();
     }
 }

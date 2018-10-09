@@ -17,12 +17,12 @@ public class RtcpSdes extends RtcpHeader {
     private final List<RtcpSdesChunk> sdesChunks;
 
     protected RtcpSdes() {
-        this.sdesChunks = new ArrayList<RtcpSdesChunk>(RtcpPacket.MAX_SOURCES);
+        this.sdesChunks = new ArrayList<RtcpSdesChunk>(DefaultRtcpPacket.MAX_SOURCES);
     }
 
     public RtcpSdes(boolean padding) {
         super(padding, RtcpHeader.RTCP_SDES);
-        this.sdesChunks = new ArrayList<RtcpSdesChunk>(RtcpPacket.MAX_SOURCES);
+        this.sdesChunks = new ArrayList<RtcpSdesChunk>(DefaultRtcpPacket.MAX_SOURCES);
     }
 
     @Override
@@ -62,8 +62,8 @@ public class RtcpSdes extends RtcpHeader {
     }
 
     public void addRtcpSdesChunk(RtcpSdesChunk rtcpSdesChunk) {
-        if (this.count >= RtcpPacket.MAX_SOURCES) {
-            throw new ArrayIndexOutOfBoundsException("Reached maximum number of chunks: " + RtcpPacket.MAX_SOURCES);
+        if (this.count >= DefaultRtcpPacket.MAX_SOURCES) {
+            throw new ArrayIndexOutOfBoundsException("Reached maximum number of chunks: " + DefaultRtcpPacket.MAX_SOURCES);
         }
         this.sdesChunks.add(rtcpSdesChunk);
         this.count++;
@@ -83,4 +83,19 @@ public class RtcpSdes extends RtcpHeader {
         }
         return "";
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("SDES:\n");
+        builder.append("version= ").append(this.version).append(", ");
+        builder.append("padding= ").append(this.padding).append(", ");
+        builder.append("source count= ").append(this.count).append(", ");
+        builder.append("packet type= ").append(this.packetType).append(", ");
+        builder.append("length= ").append(this.length).append(", ");
+        for (RtcpSdesChunk chunk : this.sdesChunks) {
+            builder.append("\n").append(chunk.toString());
+        }
+        return builder.toString();
+    }
+
 }

@@ -203,7 +203,7 @@ public class RtcpPacketFactory {
         RtcpSdes sdes = buildSdes(statistics, padding);
 
         // Build the compound packet
-        return new RtcpPacket(report, sdes);
+        return new DefaultRtcpPacket(report, sdes);
     }
 
     /**
@@ -232,7 +232,7 @@ public class RtcpPacketFactory {
         bye.addSsrc(statistics.getSsrc());
 
         // Build the compound packet
-        return new RtcpPacket(report, sdes, bye);
+        return new DefaultRtcpPacket(report, sdes, bye);
     }
 
     public static RtcpPacket buildPacket(RtcpPacketType packetType, RtpStatistics statistics) {
