@@ -1,6 +1,7 @@
 package com.sengled.media.server.rtsp.rtp;
 
 import com.sengled.media.server.NettySupport;
+import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
@@ -36,7 +37,7 @@ public final class RTP {
     }
 
 
-    public static ByteBuf encode(com.sengled.media.server.rtsp.rtcp.RtcpPacket rtcp) {
+    public static ByteBuf encode(RtcpPacket rtcp) {
         ByteBuf rtcpBytes = Netty.alloc().buffer(1500);
         rtcp.encode(rtcpBytes);
 

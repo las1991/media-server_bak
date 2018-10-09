@@ -39,7 +39,7 @@ public class TestH264 extends TestCase {
 
     public void testEquals() {
         List<Object> split2 = new ArrayList<>();
-        H264.splitFast(nals.duplicate().retain(), split2);
+//        H264.splitFast(nals.duplicate().retain(), split2);
 
         List<Object> split = new ArrayList<>();
         H264.split(nals.duplicate().retain(), split);
@@ -57,7 +57,7 @@ public class TestH264 extends TestCase {
             for (int j = 0; j < 1000; j++) {
                 RecyclableArrayList out = RecyclableArrayList.newInstance();
                 try {
-                    H264.splitFast(nals.duplicate().retain(), out);
+//                    H264.splitFast(nals.duplicate().retain(), out);
                 } finally {
                     DEFAULT.recycle(out);
                 }
