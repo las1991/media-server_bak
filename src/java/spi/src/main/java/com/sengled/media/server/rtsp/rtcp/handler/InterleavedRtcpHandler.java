@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
  * @author las
  * @date 18-10-9
  */
-public class RtcpHandler extends SimpleChannelInboundHandler<InterleavedRtcpPacket> {
+public class InterleavedRtcpHandler extends SimpleChannelInboundHandler<InterleavedRtcpPacket> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RtcpHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InterleavedRtcpHandler.class);
 
     private final RtspMediaSink rtspMediaSink;
 
-    public RtcpHandler(RtspMediaSink rtspMediaSink) {
+    public InterleavedRtcpHandler(RtspMediaSink rtspMediaSink) {
         super(false);
         this.rtspMediaSink = rtspMediaSink;
     }
