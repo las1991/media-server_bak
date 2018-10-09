@@ -8,7 +8,7 @@ import com.sengled.media.dispatcher.DefaultMediaDispatcher;
 import com.sengled.media.event.EventType;
 import com.sengled.media.event.SessionEvent;
 import com.sengled.media.server.MutableFramePacket;
-import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
+import com.sengled.media.server.rtsp.rtcp.InterleavedRtcpPacket;
 import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
 import com.sengled.media.server.rtsp.rtp.MutableRtpPacket;
 import com.sengled.media.server.rtsp.rtp.RtpPacketI;
@@ -51,26 +51,29 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
     }
 
     @Override
-    public void onRtp(InterleavedRtpPacket rtpPacket) {
+    public void onRtp(InterleavedRtpPacket packet) {
         try {
             for (RtpDePacketizer dePacketizer :
                     rtpDePacketizers) {
-                if (!(null != dePacketizer && dePacketizer.isOK())) {
-                    continue;
-                }
-                if (dePacketizer.getRtpChannel() == rtpPacket.getChannel()) {
-                    onRtpReceive(dePacketizer, rtpPacket);
+                if (null != dePacketizer && dePacketizer.isOK() && dePacketizer.getRtpChannel() == packet.getChannel()) {
+                    if (null != dePacketizer && dePacketizer.isOK()) {
+                        onRtpReceive(dePacketizer, packet);
+                    }
                 }
             }
         } finally {
-            rtpPacket.release();
+            packet.release();
         }
     }
 
     @Override
-    public void onRtcp(RtcpPacket rtcpPacket) {
-        //TODO deal rtcp
-//        onRtcpReceive();
+    public void onRtcp(InterleavedRtcpPacket packet) {
+        for (RtpDePacketizer dePacketizer :
+                rtpDePacketizers) {
+            if (null != dePacketizer && dePacketizer.isOK() && dePacketizer.getRtpChannel() == packet.getChannel()) {
+                dePacketizer.dePacket(packet);
+            }
+        }
     }
 
 
@@ -98,10 +101,6 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
         } finally {
             recycle(out);
         }
-    }
-
-    private void onRtcpReceive(RtpDePacketizer<?> rtpStream, RtcpPacket rtcpPacket) {
-        rtpStream.dePacket(rtcpPacket);
     }
 
     private void recycle(List list) {

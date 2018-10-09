@@ -1,6 +1,7 @@
 package com.sengled.media.server.rtsp.servlet;
 
 import com.sengled.media.server.rtsp.*;
+import com.sengled.media.server.rtsp.rtcp.handler.RtcpHandler;
 import com.sengled.media.server.rtsp.rtp.MediaDescriptionParserFactory;
 import com.sengled.media.server.rtsp.rtp.handler.InteleavedRtpHandler;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
@@ -124,6 +125,7 @@ public class AnnounceStreamServlet extends RtspServletAdapter {
 
         if (null != mediaSink) {
             getCtx().pipeline().addAfter(EXECUTOR_GROUP, "rtpDecoder", "rtpHandler", new InteleavedRtpHandler(mediaSink));
+            getCtx().pipeline().addAfter(EXECUTOR_GROUP, "rtcpDecoder", "rtcpHandler", new RtcpHandler(mediaSink));
             mediaSink.start();
             recorded = true;
         } else {
