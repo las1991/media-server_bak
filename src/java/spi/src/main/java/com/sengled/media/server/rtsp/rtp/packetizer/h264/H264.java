@@ -4,11 +4,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufProcessor;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
 public class H264 {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(H264.class);
+
     private static final int _2M = 2 * 1024 * 1024;
 
     private H264() {
@@ -56,9 +61,7 @@ public class H264 {
      * @param nals
      * @param out
      * @author chenxh
-     * @see H264#splitFast(ByteBuf, List)
      */
-    @Deprecated
     public static void split(ByteBuf nals, List<Object> out) {
         try {
             // 组合包访问慢
@@ -69,13 +72,13 @@ public class H264 {
             }
 
             // 
-            if (!skipToNALUnit(nals)) {
+            if (!skipToNALUnitFast(nals)) {
                 throw new IllegalArgumentException("nal start code NOT found");
             }
 
             // split
             int readerIndex = nals.readerIndex();
-            while (skipToNALUnit(nals)) {
+            while (skipToNALUnitFast(nals)) {
                 int nextNalStartIndex = nals.readerIndex();
 
                 int nalSize = nextNalStartIndex - readerIndex;
@@ -97,8 +100,30 @@ public class H264 {
     }
 
 
+    /**
+     * @param buf
+     * @return
+     * @see H264#skipToNALUnitFast(ByteBuf)
+     */
+    @Deprecated
     private static final boolean skipToNALUnit(ByteBuf buf) {
 
+        if (!buf.isReadable()) {
+            return false;
+        }
+
+        int val = 0xffffffff;
+        while (buf.isReadable()) {
+            val <<= 8;
+            val |= (buf.readByte() & 0xff);
+            if ((val & 0xffffff) == 1) {
+                break;
+            }
+        }
+        return true;
+    }
+
+    private static final boolean skipToNALUnitFast(ByteBuf buf) {
         if (!buf.isReadable()) {
             return false;
         }
@@ -110,13 +135,17 @@ public class H264 {
             public boolean process(byte value) throws Exception {
                 val <<= 8;
                 val |= value;
-                return (val & 0xffffff) == 1;
+                return (val & 0xffffff) != 1;
             }
         });
 
-        buf.readerIndex(tmp);
+        if (tmp >= 0) {
+            buf.readerIndex(tmp + 1);
+        } else {
+            buf.readerIndex(buf.writerIndex());
+        }
 
-        return tmp > 0;
+        return true;
     }
 
 
