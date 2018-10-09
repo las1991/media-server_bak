@@ -7,8 +7,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Callable;
-
 /**
  * @author las
  * @date 18-9-19
@@ -38,20 +36,6 @@ public class InteleavedRtpHandler extends SimpleChannelInboundHandler<Interleave
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, InterleavedRtpPacket rtpPacket) throws Exception {
-        //TODO 比较性能
-        ctx.channel().eventLoop().submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                return null;
-            }
-        });
-
-        ctx.channel().eventLoop().execute(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        });
         rtspMediaSink.onRtp(rtpPacket);
     }
 
