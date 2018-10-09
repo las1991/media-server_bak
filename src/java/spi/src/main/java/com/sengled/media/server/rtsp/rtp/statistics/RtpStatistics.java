@@ -584,14 +584,18 @@ public class RtpStatistics {
     }
 
     public void onRtpReceive(InterleavedRtpPacket packet) {
+        onRtpReceive(packet.seqNumber(), packet.SSRC(), packet.payload().readableBytes(), packet.time());
+    }
+
+    public void onRtpReceive(int seqNumber, long ssrc, int payloadLength, long time) {
         // Increment global statistics
         this.rtpRxPackets++;
-        this.rtpRxOctets += packet.payload().readableBytes();
+        this.rtpRxOctets += payloadLength;
         this.rtpReceivedOn = this.wallClock.getTime();
 
         // Note that there is no point in registering new members if RTCP handler has scheduled a BYE
         if (RtcpPacketType.RTCP_REPORT.equals(this.rtcpNextPacketType)) {
-            long syncSource = packet.SSRC();
+            long syncSource = ssrc;
 
             /*
              * When an RTP packet is received from a participant whose SSRC is
@@ -609,7 +613,7 @@ public class RtpStatistics {
             }
 
             // Update member statistics
-            member.onReceiveRtp(packet);
+            member.onReceiveRtp(seqNumber, payloadLength, time);
         }
     }
 

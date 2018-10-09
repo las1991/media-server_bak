@@ -26,6 +26,7 @@ import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
 import com.sengled.media.server.rtsp.rtp.RtpClock;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.mobicents.media.server.scheduler.Clock;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RtpMember {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RtpMember.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RtpMember.class);
 
     public static final int RTP_SEQ_MOD = 65536;
     public static final int MAX_DROPOUT = 100;
@@ -331,13 +332,10 @@ public class RtpMember {
      * </code>
      * </p>
      *
-     * @param packet
-     * @return
-     * @see <a
-     * href="http://tools.ietf.org/html/rfc3550#appendix-A.8">RFC3550</a>
+     * @see <a href="http://tools.ietf.org/html/rfc3550#appendix-A.8">RFC3550</a>
      */
-    private void estimateJitter(InterleavedRtpPacket packet) {
-        long transit = rtpClock.getLocalRtpTime() - packet.time();
+    private void estimateJitter(long time) {
+        long transit = rtpClock.getLocalRtpTime() - time;
         long d = transit - this.currentTransit;
         this.currentTransit = transit;
 
@@ -348,8 +346,8 @@ public class RtpMember {
         this.jitter += d - ((this.jitter + 8) >> 4);
     }
 
-    private void initJitter(InterleavedRtpPacket packet) {
-        this.currentTransit = rtpClock.getLocalRtpTime() - packet.time();
+    private void initJitter(long time) {
+        this.currentTransit = rtpClock.getLocalRtpTime() - time;
     }
 
     public void estimateRtt(long receiptDate, long lastSR, long delaySinceSR) {
@@ -357,7 +355,7 @@ public class RtpMember {
         long receiptNtpTime = NtpUtils.calculateLastSrTimestamp(receiptNtp.getSeconds(), receiptNtp.getFraction());
         long delay = receiptNtpTime - lastSR - delaySinceSR;
         this.roundTripDelay = (delay > 4294967L) ? RTP_SEQ_MOD : (int) ((delay * 1000L) >> 16);
-        logger.info("rtt=" + receiptNtpTime + " - " + lastSR + " - " + delaySinceSR + " = " + delay + " => " + this.roundTripDelay + "ms");
+        LOGGER.info("rtt=" + receiptNtpTime + " - " + lastSR + " - " + delaySinceSR + " = " + delay + " => " + this.roundTripDelay + "ms");
     }
 
     private void initSequence(int sequence) {
@@ -418,15 +416,19 @@ public class RtpMember {
     }
 
     public void onReceiveRtp(InterleavedRtpPacket packet) {
-        if (validateSequence(packet.seqNumber())) {
+        onReceiveRtp(packet.seqNumber(), packet.payload().readableBytes(), packet.time());
+    }
+
+    public void onReceiveRtp(int seqNumber, int payloadLength, long time) {
+        if (validateSequence(seqNumber)) {
             this.receivedSinceSR++;
             this.receivedPackets++;
-            this.receivedOctets += packet.payload().readableBytes();
+            this.receivedOctets += payloadLength;
 
             if (this.lastPacketReceivedOn > 0) {
-                estimateJitter(packet);
+                estimateJitter(time);
             } else {
-                initJitter(packet);
+                initJitter(time);
             }
             this.lastPacketReceivedOn = rtpClock.getLocalRtpTime();
         }

@@ -113,8 +113,7 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
                         thisRtpTime);
             }
 
-            //TODO
-//            getStatistics().onRtpReceive(rtpPkt);
+            getStatistics().onRtpReceive(rtpPkt.getSeqNumber(), rtpPkt.getSyncSource(), rtpPkt.getPayloadLength(), rtpPkt.getTime());
 
             return dePacket(this, rtpPkt, out);
         } finally {
@@ -126,7 +125,6 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
     public void dePacket(RtcpPacket rtcpPacket) {
         final RtpStatistics statistics = getStatistics();
         statistics.onRtcpReceive(rtcpPacket);
-        ;
 
         RtcpSenderReport sr = rtcpPacket.getSenderReport();
         if (null != sr) {
