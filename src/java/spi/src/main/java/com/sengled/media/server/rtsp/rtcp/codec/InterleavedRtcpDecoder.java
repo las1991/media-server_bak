@@ -1,6 +1,7 @@
 package com.sengled.media.server.rtsp.rtcp.codec;
 
-import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
+import com.sengled.media.server.rtsp.rtcp.DefaultInterleavedRtcpPacket;
+import com.sengled.media.server.rtsp.rtcp.DefaultRtcpPacket;
 import com.sengled.media.server.rtsp.rtp.FramingRtpPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -24,8 +25,7 @@ public class InterleavedRtcpDecoder extends MessageToMessageDecoder<FramingRtpPa
 
     @Override
     protected void decode(ChannelHandlerContext ctx, FramingRtpPacket msg, List<Object> out) throws Exception {
-        LOGGER.debug("rtcp {}", msg);
-        RtcpPacket rtcpPacket = new RtcpPacket();
+        DefaultRtcpPacket rtcpPacket = new DefaultInterleavedRtcpPacket(msg.getChannel());
         rtcpPacket.decode(msg.content().duplicate());
         out.add(rtcpPacket);
     }
