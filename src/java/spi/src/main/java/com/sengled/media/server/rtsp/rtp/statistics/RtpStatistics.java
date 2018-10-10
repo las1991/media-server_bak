@@ -21,10 +21,7 @@
 package com.sengled.media.server.rtsp.rtp.statistics;
 
 import com.sengled.media.server.rtsp.rtcp.*;
-import com.sengled.media.server.rtsp.rtp.CnameGenerator;
-import com.sengled.media.server.rtsp.rtp.InterleavedRtpPacket;
-import com.sengled.media.server.rtsp.rtp.RtpClock;
-import com.sengled.media.server.rtsp.rtp.SsrcGenerator;
+import com.sengled.media.server.rtsp.rtp.*;
 import org.mobicents.media.server.scheduler.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -555,7 +552,7 @@ public class RtpStatistics {
     /*
      * EVENTS
      */
-    public void onRtpSent(InterleavedRtpPacket packet) {
+    public void onRtpSent(RtpPacket packet) {
         this.rtpTxPackets++;
         this.rtpTxOctets += packet.payload().readableBytes();
         this.rtpSentOn = this.wallClock.getCurrentTime();
@@ -583,7 +580,7 @@ public class RtpStatistics {
         }
     }
 
-    public void onRtpReceive(InterleavedRtpPacket packet) {
+    public void onRtpReceive(RtpPacket packet) {
         onRtpReceive(packet.seqNumber(), packet.SSRC(), packet.payload().readableBytes(), packet.time());
     }
 

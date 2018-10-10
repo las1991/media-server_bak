@@ -15,22 +15,22 @@
  */
 package com.sengled.media.server.rtsp.rtp.packetizer.h264;
 
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.sengled.media.FramePacket.Flags;
 import com.sengled.media.MediaCodec;
 import com.sengled.media.StreamContext;
 import com.sengled.media.clock.Rational;
 import com.sengled.media.server.MutableFramePacket;
-import com.sengled.media.server.rtsp.rtp.RtpPacketI;
+import com.sengled.media.server.rtsp.rtp.RtpPacket;
 import com.sengled.media.server.rtsp.rtp.packetizer.RtpDePacketizer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 
 /**
@@ -82,19 +82,11 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
     private static final int kStapAHeaderSize = kNalHeaderSize + kLengthFieldSize;
     private static final int kNalUSize = 2;
 
-
     /**
      * The Unspecified <tt>nal_unit_type</tt> as defined by the ITU-T
      * Recommendation for H.264.
      */
     private static final int UNSPECIFIED_NAL_UNIT_TYPE = 0;
-
-
-    /**
-     * Keeps track of last (input) sequence number in order to avoid
-     * inconsistent data.
-     */
-    private long lastSequenceNumber = -1;
 
     /**
      * The <tt>nal_unit_type</tt> as defined by the ITU-T Recommendation for
@@ -149,7 +141,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
      * <tt>OUTPUT_BUFFER_NOT_FILLED</tt> to be returned by
      * {@link #process(Buffer, Buffer)}
      */
-    private int dePacketizeFUA(List<Object> out, ByteBuf in, int profile, RtpPacketI rtp) {
+    private int dePacketizeFUA(List<Object> out, ByteBuf in, int profile) {
         int ret = 0;
         byte fu_indicator = in.readByte();
         byte fu_header = in.readByte();
@@ -161,7 +153,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
         boolean end_bit = (fu_header & 0x40) != 0;
 
         if (start_bit) {
-            LOGGER.trace("FUA nal:{},time:{} start", nal_unit_type, rtp.getTime());
+            LOGGER.trace("FUA nal:{} start", nal_unit_type);
             ret |= H264_START;
             /*
              * 把之前收到的 RTP 数据整合成一个不完整的数据包 flush 出去
@@ -199,11 +191,10 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
             return UNSUPPORTED;
         }
 
-
         addFrameFlags(fuaFramePacket, profile);
         fuaFramePacket.writeBytes(in);
         if (end_bit) {
-            LOGGER.trace("FUA nal:{},time:{} end", nal_unit_type, rtp.getTime());
+            LOGGER.trace("FUA nal:{} end", nal_unit_type);
             ret |= H264_END;
             flushFrame(out);
             fuaFramePacket = null;
@@ -273,34 +264,15 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
 
 
     @Override
-    protected int dePacket(StreamContext<AVCDecoderConfigurationRecord> ctx, RtpPacketI inBuffer, List<Object> out) {
-        /*
-         * We'll only be depacketizing, we'll not act as an H.264 parser.
-         * Consequently, we'll only care about the rules of
-         * packetizing/depacketizing. For example, we'll have to make sure that
-         * no packets are lost and no other packets are received when
-         * depacketizing FU-A Fragmentation Units (FUs).
-         */
-        long sequenceNumber = inBuffer.getSeqNumber();
+    protected int dePacket(StreamContext<AVCDecoderConfigurationRecord> ctx, RtpPacket rtpPacket, List<Object> out) {
         int ret;
 
-        /*
-         * Ignore the RTP time stamp reported by JMF because it is not the
-         * actual RTP packet time stamp send by the remote peer but some locally
-         * calculated JMF value.
-         */
-        long exceptSequenceNumber = 0xFFFF & (lastSequenceNumber + 1);
-        if (sequenceNumber < exceptSequenceNumber && LOGGER.isTraceEnabled()) {
-            LOGGER.trace("except seqNumber is {}, but real is {}, last is {}", exceptSequenceNumber, sequenceNumber, lastSequenceNumber);
-        }
-
-        lastSequenceNumber = sequenceNumber;
+        int profile = rtpPacket.profile();
+        ByteBuf payload = rtpPacket.content();
 
         /*
          * get first byte of RTP.
          */
-        int profile = inBuffer.getFlags();
-        ByteBuf payload = inBuffer.content();
         byte octet = payload.getByte(payload.readerIndex());
 
         /*
@@ -328,13 +300,12 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
                     out,
                     payload,
                     profile,
-                    nal_unit_type,
-                    inBuffer);
+                    nal_unit_type);
 
         } else if (nal_unit_type == 28) { // FU-A Fragmentation unit (FU)
-            ret = dePacketizeFUA(out, payload, profile, inBuffer);
+            ret = dePacketizeFUA(out, payload, profile);
         } else if (nal_unit_type == 24) { // STAP-A (one packet, multiple nals)
-            ret = dePacketizeAggregated(out, payload, profile, inBuffer);
+            ret = dePacketizeAggregated(out, payload, profile);
         } else {
             flushImcompleteFrame(out);
 
@@ -364,7 +335,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
      * {@link #process(Buffer, Buffer)}
      */
     private int dePacketizeSingleNALUnitPacket(List<Object> out, ByteBuf rtp, int profile,
-                                               int nal_unit_type, RtpPacketI inBuffer) {
+                                               int nal_unit_type) {
         int ret = H264_START | H264_END; // frame start & end
 
         this.nal_unit_type = nal_unit_type;
@@ -428,7 +399,7 @@ public class H264DePacketizer extends RtpDePacketizer<AVCDecoderConfigurationRec
 
     }
 
-    private int dePacketizeAggregated(List<Object> out, ByteBuf payload, int profile, RtpPacketI inBuffer) {
+    private int dePacketizeAggregated(List<Object> out, ByteBuf payload, int profile) {
         int ret = H264_START | H264_END;
         MutableFramePacket frame = newFramePacket();
         try {

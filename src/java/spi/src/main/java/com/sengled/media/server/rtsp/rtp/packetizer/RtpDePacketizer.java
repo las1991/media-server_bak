@@ -8,7 +8,7 @@ import com.sengled.media.server.MutableFramePacket;
 import com.sengled.media.server.rtsp.rtcp.NtpTimeStampUtil;
 import com.sengled.media.server.rtsp.rtcp.RtcpPacket;
 import com.sengled.media.server.rtsp.rtcp.RtcpSenderReport;
-import com.sengled.media.server.rtsp.rtp.RtpPacketI;
+import com.sengled.media.server.rtsp.rtp.RtpPacket;
 import com.sengled.media.server.rtsp.rtp.RtpStreamContext;
 import com.sengled.media.server.rtsp.rtp.statistics.RtpStatistics;
 import io.netty.buffer.ByteBuf;
@@ -52,6 +52,12 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
     private int srLoop = 0;
 
     /**
+     * Keeps track of last (input) sequence number in order to avoid
+     * inconsistent data.
+     */
+    private long lastSequenceNumber = -1;
+
+    /**
      * 读取 16 进制的字符串
      *
      * @param value
@@ -90,13 +96,13 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
      * @param out
      * @return
      */
-    final public int dePacket(RtpPacketI rtpPkt, List<Object> out) {
+    final public int dePacket(RtpPacket rtpPkt, List<Object> out) {
         if (null == rtpPkt) {
             return 0;
         }
 
         try {
-            thisRtpTime = rtpPkt.getTime();
+            thisRtpTime = rtpPkt.time();
             if (firstRtpTime < 0) {
                 firstRtpTime = thisRtpTime;
             }
@@ -113,7 +119,16 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
                         thisRtpTime);
             }
 
-            getStatistics().onRtpReceive(rtpPkt.getSeqNumber(), rtpPkt.getSyncSource(), rtpPkt.getPayloadLength(), rtpPkt.getTime());
+            getStatistics().onRtpReceive(rtpPkt);
+
+            if (LOGGER.isTraceEnabled()) {
+                long sequenceNumber = rtpPkt.seqNumber();
+                long exceptSequenceNumber = 0xFFFF & (lastSequenceNumber + 1);
+                if (sequenceNumber < exceptSequenceNumber) {
+                    LOGGER.trace("except seqNumber is {}, but real is {}, last is {}", exceptSequenceNumber, sequenceNumber, lastSequenceNumber);
+                }
+                lastSequenceNumber = sequenceNumber;
+            }
 
             return dePacket(this, rtpPkt, out);
         } finally {
@@ -182,5 +197,5 @@ public abstract class RtpDePacketizer<T extends MediaCodecExtra> extends RtpStre
     public void release() {
     }
 
-    protected abstract int dePacket(StreamContext<T> ctx, RtpPacketI rtpPkt, List<Object> out);
+    protected abstract int dePacket(StreamContext<T> ctx, RtpPacket rtpPacket, List<Object> out);
 }

@@ -78,22 +78,10 @@ public class DefaultRtspMediaSink implements RtspMediaSink {
 
 
     private void onRtpReceive(RtpDePacketizer<?> dePacketizer, InterleavedRtpPacket rtpPacket) {
-        MutableRtpPacket rtp = new MutableRtpPacket(rtpPacket.payload());
-        rtp.setFlags(rtpPacket.profile());
-        rtp.setMarker(rtpPacket.marker());
-        rtp.setPayloadType(rtpPacket.payloadType());
-        rtp.setSeqNumber(rtpPacket.seqNumber());
-        rtp.setSyncSource(rtpPacket.SSRC());
-        rtp.setTime(rtpPacket.time());
-        rtp.setVersion(rtpPacket.version());
-        onRtpReceive(dePacketizer, rtp);
-    }
-
-    private void onRtpReceive(RtpDePacketizer<?> dePacketizer, RtpPacketI rtpPkt) {
         // 拆包后，转发出去
         RecyclableArrayList out = RecyclableArrayList.newInstance();
         try {
-            dePacketizer.dePacket(rtpPkt.duplicate().retain(), out);
+            dePacketizer.dePacket(rtpPacket.duplicate().retain(), out);
             while (!out.isEmpty()) {
                 final MutableFramePacket first = (MutableFramePacket) out.remove(0);
                 dispatcher.dispatch(first);
