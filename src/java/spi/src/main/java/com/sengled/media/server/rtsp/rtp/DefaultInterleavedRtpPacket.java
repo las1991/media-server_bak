@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
  * @author las
  * @date 18-9-21
  */
-public class DefaultInterleavedRtpPacket extends RtpPacket implements InterleavedRtpPacket {
+public class DefaultInterleavedRtpPacket extends RtpPacketHolder implements InterleavedRtpPacket {
 
     private final int channel;
 
