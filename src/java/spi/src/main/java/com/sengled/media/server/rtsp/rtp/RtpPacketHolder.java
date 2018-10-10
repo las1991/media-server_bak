@@ -5,25 +5,6 @@ import io.netty.buffer.ByteBuf;
 import java.util.List;
 
 /**
- * The RTP header has the following format:
- * <p>
- * 0               1               2               3
- * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |V=2|P|X|  CC   |M|     PT      |       sequence number         |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |                           timestamp                           |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |           synchronization source (SSRC) identifier            |
- * +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
- * |            contributing source (CSRC) identifiers             |
- * |                             ....                              |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * <p>
- * The first twelve octets are present in every RTP packet, while the
- * list of CSRC identifiers is present only when inserted by a mixer.
- * <p>
- * The version defined by RFC3550 specification is two.
  *
  * @author las
  * @date 18-9-20
